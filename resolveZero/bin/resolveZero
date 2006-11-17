@@ -1,0 +1,85 @@
+#!/bin/env perl 
+
+use strict;
+use warnings;
+use Getopt::Std;
+
+my $usage = <<USG;
+cabocha -f 1 inputText | resolveZero [args] > output
+[args]
+-a intraParam
+-e interParam
+
+[args for training]
+ -t  : train
+ -m  : modPath
+ -d  : modelsPath
+USG
+
+my %options;
+getopts("tm:d:a:e:h", \%options);
+die $usage if ($options{h});
+die $usage if (($options{t} and !$options{m}) or 
+	       ($options{m} and !$options{t}));
+# die $usage if (!$options{t} and !$ARGV[0]);
+die $usage if ($options{t} and !$options{d});
+
+my $intraParam = 0;
+$intraParam = $options{a} if ($options{a});
+my $interParam = 0;
+$interParam = $options{e} if ($options{e});
+
+# my $binPath = $ENV{PWD}.'/'.__FILE__; $binPath =~ s|[^/]+$||;
+my $binPath = __FILE__; $binPath =~ s|//|/|g;
+$binPath =~ s|[^/]+$||;
+$binPath =~ s|/\./|/|g;
+# print STDERR 'bin: ', $binPath, "\n";
+my $rootPath = $binPath; $rootPath =~ s|[^/]+/$||;
+# print STDERR 'root: ', $rootPath, "\n";
+# my $modPath = $rootPath; $modPath .= '/mod/';
+my $scriptPath = $rootPath.'script/';
+# print STDERR 'script: ', $scriptPath, "\n";
+my $modPath = $options{m};
+my $modelsPath = $rootPath.'models/';
+# my $modelsPath = $options{d};
+
+
+# unshift @INC, $scriptPath;
+# require 'common.pl';
+
+# unshift @INC, $scriptPath;
+# require 'resolveZero.pl';
+# require 'make'
+
+if ($options{t}) { # training
+
+    for my $type ('GA', 'WO', 'NI') {
+#      for my $type ('WO', 'NI') {
+#     for my $type ( 'NI') {
+#      for my $type ('GA') {
+	print STDERR $type.': makeTrainingInstancesForIntraSententialAntecedentIdentification.', "\n";
+	system "$scriptPath/makeTrainingInstancesIntra.pl -T $type -n 1 -m $modPath -d $modelsPath";
+ 	system "$scriptPath/trainIntra.pl -m $modelsPath -T $type";
+ 	system "$scriptPath/mkmodelIntra.pl -m $modelsPath -T $type";
+
+	print STDERR $type.': makeTrainingInstancesForIntraSententialAnaphoricityDetermination.', "\n";
+	system "$scriptPath/makeTrainingInstancesIntra2.pl -T $type -n 1 -m $modPath -d $modelsPath";
+	system "$scriptPath/trainIntra2.pl -m $modelsPath -T $type";
+	system "$scriptPath/mkmodelIntra2.pl -m $modelsPath -T $type";
+
+	print STDERR $type.': makeTrainingInstancesForInterSententialAntecedentIdentification.', "\n";
+	system "$scriptPath/makeTrainingInstancesInter.pl -T $type -n 1 -m $modPath -d $modelsPath";
+	system "$scriptPath/trainInter.pl -m $modelsPath -T $type";
+	system "$scriptPath/mkmodelInter.pl -m $modelsPath -T $type";
+
+	print STDERR $type.': makeTrainingInstancesForInterSententialAnaphoricityDetermination.', "\n";
+	system "$scriptPath/makeTrainingInstancesInter2.pl -T $type -n 1 -m $modPath -d $modelsPath";
+	system "$scriptPath/trainInter2.pl -m $modelsPath -T $type";
+	system "$scriptPath/mkmodelInter2.pl -m $modelsPath -T $type";
+    }
+} else { # test
+#     print "$scriptPath/resolveZero.pl -d $modelsPath -i $ARGV[0]\n";
+#     system "$scriptPath/resolveZero.pl -d $modelsPath  $ARGV[0]";
+    system "$scriptPath/resolveZero.pl -d $modelsPath -a $intraParam -e $interParam";
+    
+}

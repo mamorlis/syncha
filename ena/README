@@ -1,0 +1,28 @@
+README
+
+* 動作が確認されている環境
+
+たぶんどのような UNIX 系 OS でも動作しますが、動作が確認されているのは
+以下の環境です。(64bit 環境や PPC などアーキテクチャが違うと動作しません)
+
+- Gentoo Linux 2005.1 (gcc-3.4.5, glibc-2.3.6-r3, 2.6.14-gentoo-r5 i686)
+
+* 必要なソフトウェア
+
+- TinySVM http://chasen.org/~taku/software/TinySVM/
+- BACT http://chasen.og/~taku/software/bact/
+- Perl モジュール CDB_File
+
+* スクリプト
+
+* ena-mkmodel
+
+SVM のモデルとなる素性リスト構築
+
+* ena-learn
+
+分類素性学習
+
+* ena-tagger
+
+cabocha の出力をもらって event かどうか吐き出す

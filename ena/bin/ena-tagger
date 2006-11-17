@@ -1,0 +1,82 @@
+#!/usr/bin/perl -w
+
+=head1 NAME
+
+ENA -- Event Noun Annotator
+
+$Id$
+
+Copyright (C) 2005-2006 Mamoru KOMACHI <mamoru-k@is.naist.jp>
+
+=head1 SYNOPSIS
+
+ena-tagger file.cab [file.svmmodel]
+
+=head1 DESCRIPTION
+
+Ena-tagger annotates even nouns to CaboCha format text data. Annotation
+model is learned from ena-learn, and can be specified by the second argument
+depending on the model you would like to use. (e.g. You may want to use
+models from newswire for formal documents whereas you could also use specific
+models for certain domain.
+
+=cut
+
+use strict;
+use warnings;
+
+use Carp qw(croak carp);
+use Data::Dumper;
+
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+use ENA;
+
+require 'check_event.pl';
+
+use File::Temp qw(tempdir);
+my $temp_dir = tempdir( CLEANUP => 1 );
+
+my $usage = <<__USAGE__;
+USAGE: $0 file.cab [file.svmmodel]
+__USAGE__
+
+die $usage if @ARGV < 1;
+
+# main
+my $cab_file   = shift;
+my $model_file = (@ARGV eq 2) ? shift : "$Bin/../dat/mod/train.svmmodel";
+my $mod = Mod->new_file("$cab_file");
+my @texts = @{$mod->txt};
+my $morph_id = 1;
+for my $text (@texts) {
+    my @sentences = @{$text->Sentence};
+    my @noun_list;
+
+    for my $sentence (@sentences) {
+        ENA::makeTrainData($sentence, \@noun_list, OUTPUT => 0);
+        my @segments = @{$sentence->Bunsetsu};
+        for my $segment (@segments) {
+            # XXX* output opinion separately
+            print $segment->puts_bunsetsu_label;
+            my @morphs = @{$segment->Mor};
+            for my $morph (@morphs) {
+                print $morph->puts( NL => '' );
+                # とりあえずサ変のみ
+                # (本当は「動き」のようなものも入れたい)
+                if ($morph->POS =~ m/^名詞-サ変/) {
+                    my $test_file = "$temp_dir/$morph_id";
+                    open my $test_fh, '>', $test_file or croak "$!";
+                    print $test_fh ENA::get_feature($morph_id);
+                    close $test_fh;
+                    print "\tEVENT" if is_event($test_file, $model_file);
+                }
+                print "\n";
+                $morph_id++;
+            }
+        }
+        print "EOS\n";
+    }
+}
+
+1;

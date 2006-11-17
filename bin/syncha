@@ -1,0 +1,146 @@
+#!/usr/bin/env perl
+#òµÌ¥ò³ò´
+
+use strict;
+use warnings;
+
+our $VERSION = qw(1.2);
+
+use Carp qw(croak);
+use File::Temp qw(tempfile tempdir);
+use Getopt::Std;
+
+my $usage =<<"__USAGE__";
+USAGE: $0 [-a intraParam] [-e interParam] [-r chasenrc] [-s sentence splitter] [-hv123] [input-file(s)]
+__USAGE__
+
+my %options;
+getopts("a:e:hvr:s:123", \%options);
+die $usage if $options{h};
+print "Syncha version $VERSION\n" and exit 0 if $options{v};
+
+use FindBin qw($Bin);
+chdir "$Bin/.." or croak "Cannot chdir to $Bin/..: $!";
+my $resolve_zero = 'resolveZero/script/resolveZero.pl';
+my $ena_tagger   = 'ena/bin/ena-tagger';
+my $splitter_cxx = 'sentence_splitter/prog_split/sentence_splitter';
+my $splitter_pl  = 'bin/stc_splitter.pl';
+my $sent_model   = 'sentence_splitter/classifier/study.model';
+my $chasen       = 'chasen';
+my $chasen_flag  = $options{r} ? $options{r} : '-j';
+my $cabocha      = 'cabocha';
+my $fix_id       = 'ena/lib/fix_id.pl';
+my $intra_param  = $options{a} || 0;
+my $inter_param  = $options{e} || 0;
+
+=pod
+
+=head1 NAME
+
+Syncha -- SYNtactic CHunck Annotator
+
+=head1 SYNOPSIS
+
+syncha [-aeo] [input-file]
+
+=head1 DESCRIPTION
+
+Syncha is a Japanese syntactic chunck annotator. It detects predicate-
+argument stricture of verb, adjective, and verbial noun. The task
+includes:
+
+=item * recognize event noun
+
+=item * fill zero anaphora
+
+=item * identify predicate-argument structure
+
+=item * annotate opinion marker (optional)
+
+=head1 OPTIONS
+
+=item -a
+
+-a option specifies a threshold (0 - 1) to find intra-sentential arguments.
+Defaults to 0.
+
+=item -e
+
+-e option specifies a threshold (0 - 1) to find inter-sentential arguments.
+Defaults to 0.
+
+=item -s
+
+-s option specifies which sentence splitter to use. Defaults to cxx.
+Takes either cxx or pl.
+
+=item -r
+
+-r option is passed to chasen. Defaults to '-j'.
+
+=cut
+
+local $/ = undef;
+while (<>) {
+    my $fh = tempfile();
+    my $temp_file;
+    ($fh, $temp_file) = tempfile();
+    print $fh $_;
+    close $fh;
+
+    my $splitter;
+    if ($options{s} and $options{s} eq 'cxx') {
+        $splitter = "$splitter_cxx $sent_model";
+    } elsif ($options{s} and $options{s} eq 'pl') {
+        $splitter = $splitter_pl;
+    } else {
+        $splitter = "$splitter_cxx $sent_model";
+    }
+
+    my $cab = `$splitter $temp_file | $chasen $chasen_flag | $cabocha -I1 -f1`
+        or croak "Cannot exec $cabocha:$!";
+    unlink $temp_file;
+    if ($options{'1'}) {
+        print $cab;
+        exit 1;
+    }
+
+    $fh = tempfile();
+    ($fh, $temp_file) = tempfile();
+    print $fh $cab;
+    close $fh;
+
+    my $ena = `$ena_tagger $temp_file` or croak "Cannot exec $ena_tagger:$!";
+    unlink $temp_file;
+    if ($options{'2'}) {
+        print $ena;
+        exit 2;
+    }
+
+    $fh = tempfile();
+    ($fh, $temp_file) = tempfile();
+    print $fh $ena;
+    close $fh;
+
+    my $dir = tempdir( CLEANUP => 1, );
+    system("cp resolveZero/models/* $dir") == 0
+        or croak "Cannot exec cp resolveZero/models/:$!";
+    my $zero_flag = "-d $dir -a ${intra_param} -e ${inter_param}";
+    my $zero = `cat $temp_file | $resolve_zero $zero_flag`
+        or croak "Cannot exec $resolve_zero:$!";
+    unlink $temp_file;
+    if ($options{'3'}) {
+        print $zero;
+        exit 3;
+    }
+
+    $fh = tempfile();
+    ($fh, $temp_file) = tempfile();
+    print $fh $zero;
+    close $fh;
+
+    #my $result = `cat $temp_file` or croak "Cannot exec $fix_id:$!";
+    my $result = `cat $temp_file | $fix_id` or croak "Cannot exec $fix_id:$!";
+    unlink $temp_file;
+    print $result;
+}

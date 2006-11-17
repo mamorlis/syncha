@@ -1,0 +1,65 @@
+#!/usr/bin/perl -w
+
+=head1 NAME
+
+ENA -- Event Noun Annotator
+
+$Id$
+
+Copyright (C) 2005-2006 Mamoru KOMACHI <mamoru-k@is.naist.jp>
+
+=head1 SYNOPSIS
+
+ena-learn [-m file.svmmodel] file.svmdata
+
+=head1 DESCRIPTION
+
+Ena-learn reads SVM features and constructs SVM models for event noun
+annotation. You can obtain features from ena-mkmodel, and feed them
+to this program. You can specify the model file name by -m flag, or
+it is calculated from given data file name.
+
+=cut
+
+use strict;
+use warnings;
+
+use Carp qw(croak carp);
+use Data::Dumper;
+use File::Temp qw(tempdir);
+
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+#use ENA;
+
+use Getopt::Std;
+my %options;
+getopts("hm:", \%options);
+
+my $usage = <<__USAGE__;
+USAGE: $0 [-m file.svmmodel] file.svmdata
+__USAGE__
+
+die $usage if @ARGV ne 1;
+die $usage if $options{h};
+
+# main
+my $train_file = shift;
+my $model_file;
+if (defined $options{m}) {
+    $model_file = $options{m};
+} else {
+    ($model_file = $train_file) =~ s/\.*/\.svmmodel/;
+}
+my $temp_dir   = tempdir( CLEANUP => 1 );
+
+sub main {
+    my @learn    = ("svm_learn", "-t", "1", "-d", "3",
+                    "$train_file", "$model_file");
+
+	`@learn`    or croak "@learn failed: $?";
+}
+
+main();
+
+1;

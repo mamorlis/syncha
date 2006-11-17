@@ -1,0 +1,27 @@
+
+[usage]
+resolveZero [args] < input > output
+ -t  : train
+ -m  : modFileDir
+input: CaboCha-parsed data 
+
+[構成]
+bin/resolveZero
+
+script/makeTrainingInstancesIntra.pl
+       makeTrainingInstancesIntra2.pl
+       makeTrainingInstancesInter.pl 
+       makeTrainingInstancesInter2.pl
+       resolveZero.pl
+
+tools/bact-0.13/
+      ncvtool/
+
+dat/cooc/model/
+    tsv/
+    gdbm/
+    mod/
+
+[todo]
+chasen, cabocha, のinstall
+bact-0.13, ncvtoolの再コンパイル

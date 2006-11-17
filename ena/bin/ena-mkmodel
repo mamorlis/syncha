@@ -1,0 +1,74 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+use Carp qw(croak carp);
+use Data::Dumper;
+
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+use ENA;
+
+# main
+use Getopt::Std;
+my %options;
+getopts('m:h1', \%options);
+
+my $usage =<<"USAGE";
+usage: $0 [-1] [-m mod_dir]
+USAGE
+
+die $usage if defined $options{h};
+
+$ENV{ENA_MOD_DIR} = $options{m} if $options{m};
+my $mod = $options{'1'} ? Mod->new_one : Mod->new;
+my @texts = @{$mod->txt};
+my $morph_id = 1;
+for my $text (@texts) {
+    my @sentences = @{$text->Sentence};
+    my @noun_list;
+
+    # 1文ごとにトレーニング(名詞リストは文処理ごとに増える)
+    for my $sentence (@sentences) {
+        ENA::makeTrainData($sentence, \@noun_list);
+    }
+}
+
+1;
+__END__
+
+=head1 NAME
+
+ENA -- Event Noun Annotator
+
+$Id$
+
+Copyright (C) 2005-2006 Mamoru KOMACHI <mamoru-k@is.naist.jp>
+
+=head1 SYNOPSIS
+
+ena-mkmodel [-h] [-1] [-m mod_dir]
+
+=head1 DESCRIPTION
+
+Ena-mkmodel reads event annotated mod file(s) and writes features
+learned from the file(s) to stdout. If you just need only one document
+use -1 flag. The output features are compatible with TinySVM (thus SVMLight),
+and so you can safely pass them to svm_learn.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -h
+
+prints usage.
+
+=item -1
+
+uses only first mod file found in mod directory.
+
+=item -m
+
+specifies a name of the directory containing mod files. (default: ../dat/mod)
