@@ -11,7 +11,7 @@ use File::Temp qw(tempfile tempdir);
 use Getopt::Std;
 
 my $usage =<<"__USAGE__";
-USAGE: $0 [-a intraParam] [-e interParam] [-r chasenrc] [-s sentence splitter] [-hv123] [input-file(s)]
+USAGE: $0 [-a intraParam] [-e interParam] [-r chasenrc] [-hv123] [input-file(s)]
 __USAGE__
 
 my %options;
@@ -23,9 +23,7 @@ use FindBin qw($Bin);
 chdir "$Bin/.." or croak "Cannot chdir to $Bin/..: $!";
 my $resolve_zero = 'resolveZero/script/resolveZero.pl';
 my $ena_tagger   = 'ena/bin/ena-tagger';
-my $splitter_cxx = 'sentence_splitter/prog_split/sentence_splitter';
-my $splitter_pl  = 'bin/stc_splitter.pl';
-my $sent_model   = 'sentence_splitter/classifier/study.model';
+my $splitter     = 'bin/stc_splitter.pl';
 my $chasen       = 'chasen';
 my $chasen_flag  = $options{r} ? $options{r} : '-j';
 my $cabocha      = 'cabocha';
@@ -69,11 +67,6 @@ Defaults to 0.
 -e option specifies a threshold (0 - 1) to find inter-sentential arguments.
 Defaults to 0.
 
-=item -s
-
--s option specifies which sentence splitter to use. Defaults to cxx.
-Takes either cxx or pl.
-
 =item -r
 
 -r option is passed to chasen. Defaults to '-j'.
@@ -87,15 +80,6 @@ while (<>) {
     ($fh, $temp_file) = tempfile();
     print $fh $_;
     close $fh;
-
-    my $splitter;
-    if ($options{s} and $options{s} eq 'cxx') {
-        $splitter = "$splitter_cxx $sent_model";
-    } elsif ($options{s} and $options{s} eq 'pl') {
-        $splitter = $splitter_pl;
-    } else {
-        $splitter = "$splitter_cxx $sent_model";
-    }
 
     my $cab = `$splitter $temp_file | $chasen $chasen_flag | $cabocha -I1 -f1`
         or croak "Cannot exec $cabocha:$!";
