@@ -123,7 +123,7 @@ while (<>) {
     close $fh;
 
     my $dir = tempdir( CLEANUP => 1, );
-    system("cp resolveZero/models/* $dir") == 0
+    system("cp resolveZero/models/{model,fe}_* $dir") == 0
         or croak "Cannot exec cp resolveZero/models/:$!";
     my $zero_flag = "-d $dir -a ${intra_param} -e ${inter_param}";
     my $zero = `cat $temp_file | $resolve_zero $zero_flag`
