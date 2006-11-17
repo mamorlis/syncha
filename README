@@ -1,0 +1,128 @@
+           SynCha -- Japanese Predicate-Argument Structure Analyzer
+
+                         Ryu Iida <ryu-i@is.naist.jp>
+                    Mamoru Komachi <mamoru-k@is.naist.jp>
+
+                     Computational Linguistics Laboratory
+                    Graduate School of Information Science
+                   Nara Institute of Science and Technology
+
+0. はじめに
+
+新茶(SynCha)は述語項構造解析を行なうプログラムです。形態素解析・係り受け
+解析などの結果を受け取って、「誰が」「何を」「何に」「どうした」といった
+情報を出力することができます。
+
+
+1. 必要条件
+
+このプログラムは x86 Linux 上で動きます。開発は Gentoo Linux 2006.1 上で
+行っておりますが、当たらし目のディストリビューションであれば他の Linux
+でも動くのではないかと思います。RedHat Enterprise WS3 上での動作報告が
+あります。今後 Mac OS X (PPC/x86) 上での動作に対応する予定です。
+
+その他必要なソフトウェアは
+
+* darts http://chasen.org/~taku/software/darts/
+* chasen http://chasen.naist.jp/hiki/ChaSen/
+* tinysvm http://chasen.org/~taku/software/TinySVM/
+* bact http://chasen.org/~taku/software/bact/
+* yamcha http://chasen.org/~taku/software/yamcha/
+* cabocha http://chasen.org/~taku/software/cabocha/
+
+があります。また、Perl 5.8.6 以降が必要です。
+
+実際に解析を行うためには辞書のデータベースを syncha を置いたディレクトリ
+の dict ディレクトリに置く(もしくはシンボリックリンクを張る)必要がある
+のですが、このデータベースの中にはライセンス上すでに持っている場合しか
+使えないものが含まれているため、下記のリソースが使える場合にのみデータ
+ベースのバイナリ(Berkeley DB 形式)をお渡しします。
+
+* NTT 日本語語彙大系
+* EDR
+* 分類語彙表
+
+上記シソーラスをお持ちでない方でも実行できるようにツールを書き換える予定
+です。また、実行結果を見たい人は
+
+http://cl.naist.jp/~ryu-i/syncha/
+
+にて文章を入力してデモを見ることができます。今後 Web アプリケーションと
+して API を提供することによって、シソーラスのライセンスがない場合でも
+解析結果を利用できるようにする予定です。
+
+
+2. 使い方
+
+適当な場所に syncha ディレクトリを置いて、データベースのバイナリが入った
+dict ディレクトリをその中に配置します。
+
+mamoru-k@elm syncha % pwd
+/work/mamoru-k/syncha
+mamoru-k@elm syncha % ls
+CVS  Makefile  README  bin  dict  ena  resolveZero  sentence_splitter
+
+標準入力から日本語文を入れると標準出力に解析結果を出します(入力は SJIS/
+EUC-JP/ISO-2022-JP/UTF-8 を受け付けますが、出力は EUC-JP になります)。
+解析結果は CaboCha に準じます。
+
+mamoru-k@elm syncha % echo "太郎は花子を見た。" | bin/syncha
+* 0 2D 0/1 3.41155724
+太郎    タロウ  太郎    名詞-固有名詞-人名-名                   B-PERSON
+は      ハ      は      助詞-係助詞                     O
+* 1 2D 0/1 0.00000000
+花子    ハナコ  花子    名詞-固有名詞-人名-名                   B-PERSON
+ID=0
+を      ヲ      を      助詞-格助詞-一般                        O
+* 2 -1O 0/1 0.00000000
+見      ミ      見る    動詞-自立       一段    連用形  O       EVENT:WO=0
+た      タ      た      助動詞  特殊・タ        基本形  O
+。      。      。      記号-句点                       O
+EOS
+
+「見た」という動詞がどのような述語項構造を取るかが第2文節の最後のカラム
+に示されています。意見情報抽出など、精度は低くても再現率は高くして、
+とにかくなにかは出力してほしい場合は、パラメータ -a と -e を調節する
+ことで対応できます。
+
+mamoru-k@elm syncha % echo "太郎は花子を見た。" | bin/syncha -a -1
+* 0 2D 0/1 3.41155724
+太郎    タロウ  太郎    名詞-固有名詞-人名-名                   B-PERSON
+ID=1
+は      ハ      は      助詞-係助詞                     O
+* 1 2D 0/1 0.00000000
+花子    ハナコ  花子    名詞-固有名詞-人名-名                   B-PERSON
+ID=2
+を      ヲ      を      助詞-格助詞-一般                        O
+* 2 -1O 0/1 0.00000000
+見      ミ      見る    動詞-自立       一段    連用形  O
+EVENT:GA=1,WO=2,NI=1
+た      タ      た      助動詞  特殊・タ        基本形  O
+。      。      。      記号-句点                       O
+EOS
+
+現在のところ、動詞・形容詞・事態性名詞について、ガ格・ヲ格・ニ格を出力
+することができます。
+
+パラメータの詳しい説明は perldoc syncha すると表示されます。
+
+
+3. ライセンス
+
+このソフトウェアは LGPL です。
+
+
+4. 連絡先
+
+このソフトウェアに関する要望・コメント等は SynCha の開発用メーリングリスト
+<syncha-dev@lists.sourceforge.jp> までお送りください。
+
+
+-- 
+
+飯田龍 <ryu-i@is.naist.jp>
+小町守 <mamoru-k@is.naist.jp>
+
+奈良先端科学技術大学院大学情報科学研究科
+自然言語処理学講座(松本研究室)
+http://cl.naist.jp/
