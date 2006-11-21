@@ -26,7 +26,6 @@ require 'extractFeatures.pl';
 require 'cab.pl';
 
 my $rootPath = $scriptPath; $rootPath =~ s|[^/]+/$||;
-my $bactPath = $rootPath.'tools/bact-0.13/';
 
 my $intraParam = 0;
 $intraParam = $options{a} if ($options{a});
@@ -137,7 +136,7 @@ sub identify_antecedent_intra_bact {
 	open 'TMP', '>'.$testfile or die $!;
 	print TMP '+1 '.$fe."\n";
 	close TMP;
-	my $r = `$bactPath/bact_classify -v 3 $testfile $m`;
+	my $r = `bact_classify -v 3 $testfile $m`;
 # 	print STDERR 'm: ', $m, "\n";
 # 	print STDERR 'fe: ', $fe, "\n";
 # 	print STDERR 'r: ', "\n";
@@ -156,7 +155,7 @@ sub detemine_anaphoricity_intra_bact {
     open 'TMP', '>'.$testfile or die $!;
     print TMP '+1 '.$fe."\n";
     close TMP;
-    my $r = `$bactPath/bact_classify -v 3 $testfile $m`;
+    my $r = `bact_classify -v 3 $testfile $m`;
     my $score = (split ' ', (split '\n', $r)[1])[1];
     return $score;
 }
@@ -179,7 +178,7 @@ sub identify_antecedent_inter_bact {
 	open 'TMP', '>'.$testfile or die $!;
 	print TMP '+1 '.$fe."\n";
 	close TMP;
-	my $r = `$bactPath/bact_classify -v 3 $testfile $m`;
+	my $r = `bact_classify -v 3 $testfile $m`;
 	my $score = (split ' ', (split '\n', $r)[1])[1];
 	$ant = $c if ($score < 0);	
     }

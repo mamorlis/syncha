@@ -1061,7 +1061,7 @@ sub identify_ant_bact {
 	open 'TMP', '>'.$testfile or die $!;
 	print TMP '+1 '.$fe."\n";
 	close TMP;
-	my $r = `/home/ryu-i/tools/bact-0.13/bact_classify -v 3 $testfile $m`;
+	my $r = `bact_classify -v 3 $testfile $m`;
 	my $score = (split ' ', (split '\n', $r)[1])[1];
 	my $rule = &ext_rules_from_bact_log($r);
 	if ($max_score < $score) {
@@ -1093,7 +1093,7 @@ sub identify_ant_bact_tou {
 	open 'TMP', '>'.$testfile or die $!;
 	print TMP '+1 '.$fe."\n";
 	close TMP;
-	my $r = `/home/ryu-i/tools/bact-0.13/bact_classify -v 3 $testfile $m`;
+	my $r = `bact_classify -v 3 $testfile $m`;
 	my $score = (split ' ', (split '\n', $r)[1])[1];
 	my $rule = &ext_rules_from_bact_log($r);
 	$ant = $c if ($score < 0);
@@ -1150,7 +1150,7 @@ sub identify_ant_inter_bact {
 	open 'TMP', '>'.$testfile or die $!;
 	print TMP '+1 '.$fe."\n";
 	close TMP;
-	my $r = `/home/ryu-i/tools/bact-0.13/bact_classify -v 3 $testfile $m`;
+	my $r = `bact_classify -v 3 $testfile $m`;
 	my $res = (split ' ', (split '\n', $r)[1])[1];
 	$ant = $c if ($res < 0);
     }
@@ -1173,7 +1173,7 @@ sub determine_ana_inter_bact {
     open 'TMP', '>'.$testfile or die $!;
     print TMP '+1 '.$fe."\n";
     close TMP;
-    my $r = `/home/ryu-i/tools/bact-0.13/bact_classify -v 3 $testfile $m`;
+    my $r = `bact_classify -v 3 $testfile $m`;
     my $res = (split ' ', (split '\n', $r)[1])[1];
     return $res;
 }
@@ -1228,7 +1228,7 @@ sub identify_ant_all_bact {
 	open 'TMP', '>'.$testfile or die $!;
 	print TMP '+1 '.$fe."\n";
 	close TMP;
-	my $r = `/home/ryu-i/tools/bact-0.13/bact_classify -v 3 $testfile $m`;
+	my $r = `bact_classify -v 3 $testfile $m`;
 	my $res = (split ' ', (split '\n', $r)[1])[1];
 	$ant = $c if ($res < 0);
     }
@@ -1253,7 +1253,7 @@ sub determine_ana_all_bact {
     open 'TMP', '>'.$testfile or die $!;
     print TMP '+1 '.$fe."\n";
     close TMP;
-    my $r = `/home/ryu-i/tools/bact-0.13/bact_classify -v 3 $testfile $m`;
+    my $r = `bact_classify -v 3 $testfile $m`;
     my $res = (split ' ', (split '\n', $r)[1])[1];
     return $res;
 }
@@ -1344,7 +1344,7 @@ sub identify_antecedent_intra {
 	open 'TMP', '>'.$testfile or die $!;
 	print TMP '+1 '.$fe."\n";
 	close TMP;
-	my $r = `/home/ryu-i/tools/bact-0.13/bact_classify -v 3 $testfile $mt`;
+	my $r = `bact_classify -v 3 $testfile $mt`;
 
 	my $score = (split ' ', (split '\n', $r)[1])[1];
 

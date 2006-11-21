@@ -18,9 +18,8 @@ die $usage unless ($options{T});
 my $scriptPath = __FILE__; $scriptPath =~ s|//|/|g;
 $scriptPath =~ s|/\./|/|g; $scriptPath =~ s|[^/]+$||;
 my $rootPath = $scriptPath; $rootPath =~ s|[^/]+/$||;
-my $bactPath = $rootPath.'tools/bact-0.13/';
 
 my $modelsPath = $options{m};
 my $type = $options{T};
 
-system "$bactPath/bact_mkmodel -i $modelsPath/model_t_0_${type} -o $modelsPath/model_t_0_${type}.bin -O $modelsPath/model_t_0_${type}.O";
+system "bact_mkmodel -i $modelsPath/model_t_0_${type} -o $modelsPath/model_t_0_${type}.bin -O $modelsPath/model_t_0_${type}.O";

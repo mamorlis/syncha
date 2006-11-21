@@ -114,7 +114,7 @@ sub ext_fe_svm_inter2 {
 	open 'TMP', '>'.$testfile or die $!;
 	print TMP '+1 '.$fe."\n";
 	close TMP;
-	my $r = `/home/ryu-i/tools/bact-0.13/bact_classify -v 3 $testfile $m`;
+	my $r = `bact_classify -v 3 $testfile $m`;
 	my $score = (split ' ', (split '\n', $r)[1])[1];
 	$ant = $c if ($score < 0);
 

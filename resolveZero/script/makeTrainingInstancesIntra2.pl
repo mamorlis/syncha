@@ -103,7 +103,7 @@ sub ext_num2fe {
 				    open 'TMP', '>'.$testfile or die $!;
 				    print TMP '+1 '.$fe."\n";
 				    close TMP;
-				    my $r = `/home/ryu-i/tools/bact-0.13/bact_classify -v 3 $testfile $m[$num]`;
+				    my $r = `bact_classify -v 3 $testfile $m[$num]`;
 				    my $score = (split ' ', (split '\n', $r)[1])[1];
 				    if ($score > 0) {
 					$score[$i]++; $score[$j]--;
@@ -129,7 +129,7 @@ sub ext_num2fe {
 				open 'TMP', '>'.$testfile or die $!;
 				print TMP '+1 '.$fe."\n";
 				close TMP;
-				my $r = `/home/ryu-i/tools/bact-0.13/bact_classify -v 3 $testfile $m[$num]`;
+				my $r = `bact_classify -v 3 $testfile $m[$num]`;
 				my $score = (split ' ', (split '\n', $r)[1])[1];
 				if ($score =~ /nan/) {
 				    print STDERR $fe, "\n";
