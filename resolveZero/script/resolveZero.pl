@@ -3,6 +3,8 @@
 use strict;
 use warnings;
 use Getopt::Std;
+use Fcntl;
+use DB_File;
 
 my $usage = <<USG;
 cabocha inputText | ./resolveZero.pl -d modelsPath 
@@ -25,12 +27,51 @@ require 'centerList.pl';
 require 'extractFeatures.pl';
 require 'cab.pl';
 
+use FindBin qw($Bin);
+tie my %db, 'DB_File', $Bin.'/../../dict/db/v2type.db', O_RDONLY, 0644 or die $!;
+
 my $rootPath = $scriptPath; $rootPath =~ s|[^/]+/$||;
 
-my $intraParam = 0;
-$intraParam = $options{a} if ($options{a});
-my $interParam = 0;
-$interParam = $options{e} if ($options{e});
+my $default_param = 0;
+my %intraParam = ();
+if ($options{a}) {
+    if ($options{a} =~ /\:/) {
+	my ($param_GA, $param_WO, $param_NI) = split '\:', $options{a};
+	$intraParam{GA} = ($param_GA)? $param_GA : $default_param;
+	$intraParam{WO} = ($param_WO)? $param_WO : $default_param;
+	$intraParam{NI} = ($param_NI)? $param_NI : $default_param;
+    } else {
+	$intraParam{GA} = $options{a};
+	$intraParam{WO} = $options{a};
+	$intraParam{NI} = $options{a};
+    }
+} else {
+    $intraParam{GA} = $default_param;
+    $intraParam{WO} = $default_param;
+    $intraParam{NI} = $default_param;
+}
+my %interParam = ();
+if ($options{e}) {
+    if ($options{e} =~ /\:/)  {
+	my ($param_GA, $param_WO, $param_NI) = split '\:', $options{e};
+	$interParam{GA} = ($param_GA)? $param_GA : $default_param;
+	$interParam{WO} = ($param_WO)? $param_WO : $default_param;
+	$interParam{NI} = ($param_NI)? $param_NI : $default_param;
+    } else {
+	$intraParam{GA} = $options{e};
+	$intraParam{WO} = $options{e};
+	$intraParam{NI} = $options{e};
+    }
+} else {
+    $interParam{GA} = $default_param;
+    $interParam{WO} = $default_param;
+    $interParam{NI} = $default_param;
+}
+
+# my $intraParam = 0;
+# $intraParam = $options{a} if ($options{a});
+# my $interParam = 0;
+# $interParam = $options{e} if ($options{e});
 
 &main;
 
@@ -60,7 +101,18 @@ sub resolve_zero {
             }
 	    if ($b->PRED) {
 		my $pred = $b;
-		for my $type ('GA', 'WO', 'NI') {
+		my @type = ();
+		if ($b->HEAD_POS =~ /^Æ°»ì/) {
+
+		    if ($db{$b->PRED}) {
+ 			@type = split ' ', $db{$b->PRED};
+		    } else {
+			@type = ('GA', 'WO', 'NI');
+		    }
+		} else {
+		    @type = ('GA');
+		}
+		for my $type (@type) {
 # 		    print STDERR 'intra ant', "\t", $type, "\n";
 		    my $intra_ant = &identify_antecedent_intra_bact($pred, $s, $type, $cl, $mRef->{intra}->{ant}->{$type});
 # 		    print STDERR 'intra ana', "\n";
@@ -68,7 +120,7 @@ sub resolve_zero {
 		    if ($intra_ant) {
 			$intra_score = &detemine_anaphoricity_intra_bact($s, $pred, $intra_ant, $type, $cl, $mRef->{intra}->{ana}->{$type});
 		    }
-		    if ($intra_score > $intraParam) {
+		    if ($intra_score > $intraParam{$type}) {
 			$pred->{$type} = $intra_ant;
 		    } else {
 # 			print STDERR 'inter ant', "\n";
@@ -78,7 +130,7 @@ sub resolve_zero {
 			if ($inter_ant) {
 			    $inter_score = &detemine_anaphoricity_inter_bact($s, $pred, $inter_ant, $type, $cl, $mRef->{inter}->{ana}->{$type});
 			}
-			$pred->{$type} = $inter_ant if ($inter_score > $interParam);
+			$pred->{$type} = $inter_ant if ($inter_score > $interParam{$type});
 		    }
 		}
 	    }
@@ -117,8 +169,6 @@ sub output_text {
     return;
 }
 
-# my $inter_ant = &identify_antecedent_inter_bact($pred, $s, $type, $cl, $mRef->{inter}->{ant}->{$type});
-# my $inter_score = &detemine_anaphoricity_inter_bact($s, $pred, $inter_ant, $type, $cl, $mRef->{inter}->{ana}->{$type});
 
 ## intra-sentential 
 sub identify_antecedent_intra_bact {
@@ -137,10 +187,6 @@ sub identify_antecedent_intra_bact {
 	print TMP '+1 '.$fe."\n";
 	close TMP;
 	my $r = `bact_classify -v 3 $testfile $m`;
-# 	print STDERR 'm: ', $m, "\n";
-# 	print STDERR 'fe: ', $fe, "\n";
-# 	print STDERR 'r: ', "\n";
-# 	print STDERR $r, "\n";
 	my $score = (split ' ', (split '\n', $r)[1])[1];
 	$ant = $c if ($score < 0);	
     }
