@@ -128,10 +128,7 @@ sub new {
 	$self->CT($mor[4]);
 	$self->CF($mor[5]);
 	$self->NE($mor[6]) if ($mor[6]);
-	#$self->EQ($mor[7]) if ($mor[7]);
-    $self->EVENT($mor[7]) if ($mor[7]);
-	$self->ANAPHOR($mor[8]) if ($mor[8]);	
-	$self->AUX($self->check_aux());
+	$self->EVENT($mor[7]) if ($mor[7]);
     } elsif (scalar(@_) > 1) {
 	$self->WF($_[0]);
 	$self->READ($_[1]);
@@ -140,9 +137,7 @@ sub new {
 	$self->CT($_[4]);
 	$self->CF($_[5]);
 	$self->NE($_[6]) if ($_[6]);
-    $self->EVENT($_[7]) if ($_[7]);
-	$self->EQ($_[8]) if ($_[8]);
-	$self->ANAPHOR($_[9]) if ($_[9]);	
+	$self->EVENT($_[7]) if ($_[7]);
     } else { # init
 	$self->WF('');
 	$self->READ('');
@@ -774,6 +769,24 @@ sub PRED {
 	$self->{PRED} = $_[0];
     } else {
 	return $self->{PRED};
+    }
+}
+
+sub PRED_FLAG {
+    my $self = shift;
+    if (@_) {
+	$self->{PRED_FLAG} = $_[0];
+    } else {
+	return $self->{PRED_FLAG};
+    }
+}
+
+sub EVENT {
+    my $self = shift; $self->KEYS('EVENT');
+    if (@_) {
+	$self->{EVENT} = $_[0];
+    } else {
+	return $self->{EVENT};
     }
 }
 
@@ -2273,17 +2286,6 @@ sub puts_mod {
     }
     $out .= $self->dep_type.' '.
 	    $self->head.'/'.$self->func.' '.$self->weight.' '.$self->opinion."\n";
-#     $out .= '! ID:'.$self->ID."\n" if ($self->ID);
-    $out .= '! PRED_ID:'.$self->PRED_ID."\n" if ($self->PRED_ID);
-#    for my $type ('GA', 'WO', 'NI') {
-#	if (ref($self->{$type}) eq 'Bunsetsu') {
-#	    my $b = $self->{$type};
-#	    $out .= '! '.$type.':'.$b->sid.':'.$b->bid."\n";
-#	}
-#    }
-#    for (@m) {
-#	$out .= $_->puts;
-#    }
 
     for (my $i = 0; $i < @m; $i++) {
 	$out .= $m[$i]->puts;
@@ -2295,6 +2297,15 @@ sub puts_mod {
             }
         }
         $out .= "\tEVENT:".join(q{,}, @event_args) if @event_args;
+	
+	if ($self->head eq $i) {
+	    if  ($self->PRED_FLAG) {
+		$out .= (@event_args)? ' TYPE:pred' : "\tTYPE:pred";
+	    } elsif ($self->EVENT) {
+		$out .= (@event_args)? ' TYPE:event' : "\tTYPE:event";
+	    }
+	}
+
         $out .= "\n";
     }
     return $out;
@@ -2395,6 +2406,7 @@ sub new {
 	$cab[$i]->EDR_ORG(&EDR::check_edr_org($cab[$i]));
 	$cab[$i]->ANIMACY(&check_animacy($cab[$i]));
 	$cab[$i]->PRONOUN_TYPE(&PRONOUN::check_pronoun_type($cab[$i]));
+	$cab[$i]->EVENT(&ext_event($cab[$i]));
 	$cab[$i]->descendant(&ext_descendant($i, @cab));
 	$cab[$i]->DOU(&check_dou($cab[$i]));
 #  	$cab[$i]->is_exophora(0);
@@ -2403,6 +2415,7 @@ sub new {
     for (my $i=$c_num-1;$i>=0;$i--) {
 	# 係り先がpredかどうかを見るので逆から処理する
 	$cab[$i]->PRED(&check_pred($cab[$i], @cab));
+	$cab[$i]->PRED_FLAG(1) if ($cab[$i]->PRED);
 	$cab[$i]->DEP_CASE(&ext_dep_case($i, @cab));
     }
 
@@ -2860,6 +2873,15 @@ sub ext_pre_definite {
 	return 'PRE_DEF_'.$1 if ($d->HEAD_BF =~ /^(この|あの|その)/);	
     }
     return '';
+}
+
+sub ext_event {
+    my $b = shift;
+    my @m = @{$b->Mor}; my $m_num = @m;
+    for my $m (reverse @m) {
+	return 1 if ($m->EVENT);
+    }
+    return 0;
 }
 
 sub check_animacy {
