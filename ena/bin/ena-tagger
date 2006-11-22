@@ -47,31 +47,24 @@ die $usage if @ARGV < 1;
 my $cab_file   = shift;
 my $model_file = (@ARGV eq 2) ? shift : "$Bin/../dat/mod/train.svmmodel";
 my $mod = Mod->new_file("$cab_file");
-my @texts = @{$mod->txt};
-my $morph_id = 1;
-for my $text (@texts) {
-    my @sentences = @{$text->Sentence};
-    my @noun_list;
-
-    for my $sentence (@sentences) {
-        ENA::makeTrainData($sentence, \@noun_list, OUTPUT => 0);
-        my @segments = @{$sentence->Bunsetsu};
-        for my $segment (@segments) {
+my $check_event = new Check::Event ($model_file, $mod);
+my $morph_id = 0;
+for my $text (@{ $mod->txt }) {
+    for my $sentence (@{ $text->Sentence }) {
+        for my $segment (@{ $sentence->Bunsetsu }) {
             # XXX* output opinion separately
             print $segment->puts_bunsetsu_label;
-            my @morphs = @{$segment->Mor};
-            for my $morph (@morphs) {
+            for my $morph (@{ $segment->Mor }) {
+                # do not put newline
                 print $morph->puts( NL => '' );
+
                 # とりあえずサ変のみ
                 # (本当は「動き」のようなものも入れたい)
                 if ($morph->POS =~ m/^名詞-サ変/) {
-                    my $test_file = "$temp_dir/$morph_id";
-                    open my $test_fh, '>', $test_file or croak "$!";
-                    print $test_fh ENA::get_feature($morph_id);
-                    close $test_fh;
-                    print "\tEVENT" if is_event($test_file, $model_file);
+                    print "\tEVENT" if $check_event->is_event($morph_id);
                 }
                 print "\n";
+
                 $morph_id++;
             }
         }

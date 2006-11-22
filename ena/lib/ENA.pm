@@ -51,7 +51,7 @@ my $syn_offset = 60000;
 my $edr_offset = 70000;
 
 # 素性を一意にするため
-my $morph_id = 1;
+my $morph_id = 0;
 sub set_morph_id {
     $morph_id = shift;
 }
