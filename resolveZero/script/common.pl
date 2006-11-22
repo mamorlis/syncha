@@ -9,8 +9,6 @@ unshift @INC, $scriptPath;
 require 'centerList.pl'; require 'extractFeatures.pl';
 require 'cab.pl';
 
-use TinySVM;
-
 sub output_opt {
     my ($name, $optref) = @_;
     open 'OPT', '>'.$optref->{d}.'/'.$name.'.opt' or die $!;
@@ -393,26 +391,6 @@ sub ext_clause_tmp {
 # #     }
 # }
 
-sub identify_ant {
-    my $pred = shift; my $mt = shift; my $f2n = shift; 
-    my $case = shift; my $cl = shift; my @c = @_;
-    my $ant = shift @c; 
-
-#     print STDERR 'pred:', $pred->STRING, "\n";
-    for my $c (@c) {
-	#                        pred, right, left
-	my $fe  = &ext_features_t($pred, $ant, $c, $case, $cl);
-#  	print STDERR $fe, "\n";
-	my $num = &fe2num($fe, $f2n);
-	my $res = $mt->classify($num);
-# 	print STDERR $res, "\t", $c->STRING, "\t", $ant->STRING, "\n",
-	"\t", $fe, "\n";
- 	$ant = $c if ($res > 0);
-#  	$ant = $c if ($res < 0);
-    }
-    return $ant;
-}
-
 sub fe2num {
     my $fe = shift; my $f2n = shift;
     my @num = ();
@@ -689,68 +667,41 @@ sub ext_candidates_including_dep {
     my @b = @{$s->Bunsetsu}; my $b_num = @b;
     my @c = ();
 
-#     my %dep = ();
-#     for (@{$pred->dtr}) {
-# 	$dep{$_->bid} = 1;
-#     }
-#     $dep{$pred->dep->bid} = 1 if (ref($pred->dep) eq 'Bunsetsu');
-
-    for (my $bid=0;$bid<$b_num;$bid++) {
-	my $b = $b[$bid];
-	next if ($b->bid == $pred->bid); # 対象となる述語は除く
-
-# 	if ($b->PRED_ID) {
-# 	    # 述語と係り関係にあるGA,WO,NIを加えると，
-# 	    # もともと係っている候補と重複することになるので，
-# 	    # その場合は除く．
-#  	    for my $type (('GA', 'WO', 'NI')) {
-# 		if ($b->{$type.'_b'} and # $b が GA を持ち，
-# 		    !$dep{$b->{$type.'_b'}->bid} and # GA は $b 係り関係になく
-# 		    $b->{$type.'_b'}->NOUN) { # 名詞である場合
-# 		    my $z = $b->{$type.'_b'}; my $flg = 1;
-# 		    if (ref($z->dep) eq 'Bunsetsu') {
-# 			my @dtr = @{$z->dep->dtr};
-# 			for my $dtr (@dtr) {
-# 			    # 係り関係にあるものを除く．
-#  			    $flg = 0 if ($dtr->bid eq $z->bid_org);
-# 			}
-# 		    }
-# 		    push @c, $b->{$type.'_b'} if ($flg);
-# 		}
-# 	    }
-# 	}
-	push @c, $b if ($b->NOUN);
-# 	push @c, $b if (!$dep{$b->bid} and $b->NOUN);
+    my %except = ();
+    for my $type ('GA', 'WO', 'NI') {
+	next unless ($pred->{$type});
+	my $c = $pred->{$type};
+	$except{$c->sid.':'.$c->bid} = 1;
     }
 
-    # 文末から文頭の順に
+    for (my $bid=0;$bid<$b_num;$bid++) {
+	next if ($b[$bid]->bid == $pred->bid); # 対象となる述語は除く
+	next if ($except{$b[$bid]->sid.':'.$b[$bid]->bid});
+	push @c, $b[$bid] if ($b[$bid]->NOUN);
+    }
+
     return reverse @c;
 }
 
-
 sub ext_inter_candidates {
     my $t = shift; my $pred = shift;
-    my @s = @{$t->Sentence}; my $s_num = @s;
-    my @c = ();
-
     return () if ($pred->sid == 0);
-    
-#     print STDERR 'pred sid: ', $pred->sid, "\n";
-    for (my $sid=0;$sid<$pred->sid;$sid++) {
-# 	print STDERR 'sid: ', $sid, "\n";
-	my $s = $s[$sid];
-	my @b = @{$s->Bunsetsu}; my $b_num = @b;
-	for (my $bid=0;$bid<$b_num;$bid++) {
-	    my $b = $b[$bid];
-	    if ($b->PRED_ID) {
-		for my $type ('GA', 'WO', 'NI') {
-		    if ($b->{$type.'_b'} and # $b がゼロ代名詞を持ち
-			$b->{$type.'_b'}->NOUN) { # 名詞である場合
-			push @c, $b->{$type.'_b'};
-		    }
-		}
-	    }
-	    push @c, $b if ($b->NOUN);
+
+    my %except = ();
+    for my $type ('GA', 'WO', 'NI') {
+	next unless ($pred->{$type});
+	my $c = $pred->{$type};
+	$except{$c->sid.':'.$c->bid} = 1;
+    }
+
+    my @c = ();
+    my @s = @{$t->Sentence}; my $s_num = @s;
+    for (my $sid=$pred->sid-1;$sid<$pred->sid;$sid++) {
+	next if ($sid < 0);
+	my @b = @{$s[$sid]->Bunsetsu}; my $b_num = @b;
+ 	for (my $bid=0;$bid<$b_num;$bid++) {
+	    next if ($except{$b[$bid]->sid.':'.$b[$bid]->bid});
+ 	    push @c, $b[$bid] if ($b[$bid]->NOUN);
 	}
     }
     return reverse @c;
@@ -784,47 +735,6 @@ sub ext_all_candidates {
     
     return reverse @c; # 述語を含む文の文末まで
     die "check ext_all_candidates\n";
-}
-
-sub open_model_t { 
-    my $dir = shift; my $t = shift; # 1,2
-
-    die "open_model_t in common.pl". $!
-	if ((!$t) or ($t and ($t != 1 and $t != 2)));
-    
-    my $type = ($t == 1)? 't0' : 't1d2';
-
-    opendir 'DIR', $dir or die $!;
-    my @file = sort grep /^model_t_\d_$type/, readdir DIR;
-    closedir DIR;
-
-    my @mt = ();
-    for my $file (@file) {
-# 	print STDERR $file, "\n";
-	my $m = new TinySVM::Model();
-	$m->read($dir.'/'.$file);
-	push @mt, $m;
-    }
-    return @mt;
-}
-
-sub open_model_t2 {
-    my $dir = shift; my $t = shift; # 1,2
-    die "open_model_t2 in common.pl". $!
-	if ((!$t) or ($t and ($t != 1 and $t != 2)));
-    my $type = ($t == 1)? 't0' : 't1d2';
-    opendir 'DIR', $dir or die $!;
-    my @file = sort grep /model_t2_\d_$type/, readdir DIR;
-    closedir DIR;
-    
-    my @mt2 = ();
-    for my $file (@file) {
-# 	print STDERR $file, "\n";
-	my $m = new TinySVM::Model();
-	$m->read($dir.'/'.$file);
-	push @mt2, $m;
-    }
-    return @mt2;
 }
 
 sub open_model_t_bact {
@@ -921,75 +831,6 @@ sub open_model_all {
     for my $file (@file) {
 # 	print STDERR 'open ', $file, "\n";
 	push @m, $dir.'/'.$file;
-    }
-    return @m;
-}
-
-sub open_model_inter_svm_t {
-    my $dir = shift; my $t = shift;
-    
-    opendir 'DIR', $dir or die $!;
-#     my @file = sort grep /^model_inter_t_\d+$/, readdir DIR;
-    my @file = sort grep /^model_inter_t_\d+_t${t}$/, readdir DIR;
-    closedir DIR;
-
-    my @m = ();
-    for my $file (@file) {
-# 	print STDERR 'load ', $file, "...\n";
-	my $m = new TinySVM::Model();
-	$m->read($dir.'/'.$file);
-	push @m, $m;
-    }
-    return @m;
-}
-
-
-sub open_model_inter_svm {
-    my $dir = shift; my $t = shift; my $s = shift;
-    opendir 'DIR', $dir or die $!;
-    my @file = sort grep /^model_inter_\d+_t${t}s${s}$/, readdir DIR;
-    closedir DIR;
-    
-    my @m = ();
-    for my $file (@file) {
-# 	print STDERR 'load ', $file, "...\n";
-	my $m = new TinySVM::Model();
-	$m->read($dir.'/'.$file);
-	push @m, $m;
-    }
-    return @m;
-}
-
-sub open_model_all_svm_t {
-    my $dir = shift; my $t = shift;
-    
-    opendir 'DIR', $dir or die $!;
-#     my @file = sort grep /^model_inter_t_\d+$/, readdir DIR;
-    my @file = sort grep /^model_all_t_\d+_t${t}$/, readdir DIR;
-    closedir DIR;
-
-    my @m = ();
-    for my $file (@file) {
-# 	print STDERR 'load ', $file, "...\n";
-	my $m = new TinySVM::Model();
-	$m->read($dir.'/'.$file);
-	push @m, $m;
-    }
-    return @m;
-}
-
-sub open_model_all_svm {
-    my $dir = shift; my $t = shift; my $s = shift;
-    opendir 'DIR', $dir or die $!;
-    my @file = sort grep /^model_all_\d+_t${t}s${s}$/, readdir DIR;
-    closedir DIR;
-    
-    my @m = ();
-    for my $file (@file) {
-# 	print STDERR 'load ', $file, "...\n";
-	my $m = new TinySVM::Model();
-	$m->read($dir.'/'.$file);
-	push @m, $m;
     }
     return @m;
 }
@@ -1194,23 +1035,6 @@ sub identify_ant_all {
     }
     return $ant;
 }
-
-# sub identify_ant_all {
-#     my ($t, $pred, $case, $cl, $m, $f2n, $optref) = @_; # $case: GA, WO, NI
-#     my @c = &ext_all_candidates($t, $pred);
-#     return '' unless (@c);
-#     my $ant = shift @c; my $c_num = @c;
-#     for (my $cid=0;$cid<$c_num;$cid++) {
-# 	my $c = $c[$cid];
-# 	# $c: left, $ant: right
-# 	my $fe  = &ext_features_svm_inter_t($pred, $ant, $c, $cl, $t, $case, $optref);
-# 	my $num = &fe2num($fe, $f2n);
-# 	my $res = $m->classify($num);
-# # 	print STDERR $res, "\n";
-# 	$ant = $c if ($res < 0);
-#     }
-#     return $ant;
-# }
 
 sub identify_ant_all_bact {
     my ($t, $pred, $case, $cl, $m, $optref) = @_; # $case: GA, WO, NI
