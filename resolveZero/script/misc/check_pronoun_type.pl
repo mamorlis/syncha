@@ -1,9 +1,15 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/env perl
 
 package PRONOUN;
 
 use strict;
-use DB_File;
+use warnings;
+
+BEGIN {
+    unless (eval "use BerkeleyDB; 1") {
+        use DB_File;
+    }
+}
 
 # my $ZERO_DAT_PATH = $ENV{ZERO_DAT_PATH};
 
@@ -14,7 +20,17 @@ my $rootPath = $miscPath; $rootPath =~ s|[^/]+/$||; $rootPath =~ s|[^/]+/$||;
 my $dbPath = $rootPath.'../dict/db/';
 
 my $pronoun = $dbPath.'/pronoun.db';
-tie my %pronoun, 'DB_File', $pronoun, O_RDONLY, 0444, $DB_HASH or die $!;
+
+my %pronoun;
+if (eval "require BerkeleyDB; 1") {
+    tie %pronoun, 'BerkeleyDB::Hash',
+        -Filename => $pronoun,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or die $!;
+} elsif (eval "require DB_File; 1") {
+    tie %pronoun, 'DB_File', $pronoun, O_RDONLY, 0444, $DB_HASH or die $!;
+}
 
 sub check_pronoun_type {
     my $bunsetsu = shift;

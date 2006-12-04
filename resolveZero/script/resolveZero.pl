@@ -1,10 +1,15 @@
-#!/bin/env perl
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
 use Getopt::Std;
 use Fcntl;
-use DB_File;
+
+BEGIN {
+    unless (eval "use BerkeleyDB; 1") {
+        use DB_File;
+    }
+}
 
 my $usage = <<USG;
 cabocha inputText | ./resolveZero.pl -d modelsPath 
@@ -28,7 +33,17 @@ require 'extractFeatures.pl';
 require 'cab.pl';
 
 use FindBin qw($Bin);
-tie my %db, 'DB_File', $Bin.'/../../dict/db/v2type.db', O_RDONLY, 0644 or die $!;
+my $v2type = $Bin.'/../../dict/db/v2type.db';
+my %db;
+if (eval "require BerkeleyDB; 1") {
+    tie %db, 'BerkeleyDB::Hash',
+        -Filename => $v2type;
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or die $!;
+} elsif (eval "require DB_File; 1") {
+    tie %db, 'DB_File', $v2type, O_RDONLY, 0644 or die $!;
+}
 
 my $rootPath = $scriptPath; $rootPath =~ s|[^/]+/$||;
 

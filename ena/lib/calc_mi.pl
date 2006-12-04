@@ -1,25 +1,45 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/env perl
 
 use strict;
-# use Getopt::Std;
-#use CDB_File;
-#use GDBM_File;
-use DB_File;
+use warnings;
+BEGIN {
+    unless (eval "use BerkeleyDB; 1") {
+        use DB_File;
+    }
+}
 
 use Carp qw(carp croak);
 
 use ENA::Conf;
-my $Ndic = "$ENV{ENA_DB_DIR}/n2id.db";
-my $Vdic = "$ENV{ENA_DB_DIR}/v2id.db";
+my $Ndic      = "$ENV{ENA_DB_DIR}/n2id.db";
+my $Vdic      = "$ENV{ENA_DB_DIR}/v2id.db";
+my $ncv2score = "$ENV{ENA_DB_DIR}/ncv2score.db";
 
-tie my %Ndic, 'DB_File', $Ndic, O_RDONLY, 0644, $DB_HASH
-    or croak "Cannot open $Ndic:$!";
-tie my %Vdic, 'DB_File', $Vdic, O_RDONLY, 0644, $DB_HASH
-    or croak "Cannot open $Vdic:$!";
-
-my $ncv2file = "$ENV{ENA_DB_DIR}/ncv2score.db";
-tie my %ncv2score, 'DB_File', $ncv2file, O_RDONLY, 0644, $DB_HASH
-    or croak "Cannot open $ncv2file:$!";
+my (%Ndic, %Vdic, %ncv2score);
+if (eval "require BerkeleyDB; 1") {
+    tie %Ndic, 'BerkeleyDB::Hash',
+        -Filename => $Ndic,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0644
+        or croak "Cannot open $Ndic:$!";
+    tie %Vdic, 'BerkeleyDB::Hash',
+        -Filename => $Vdic,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0644
+        or croak "Cannot open $Vdic:$!";
+    tie %ncv2score, 'BerkeleyDB::Hash',
+        -Filename => $ncv2score,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0644,
+        or croak "Cannot open $ncv2score:$!";
+} elsif (eval "require DB_File; 1") {
+    tie %Ndic, 'DB_File', $Ndic, O_RDONLY, 0644, $DB_HASH
+        or croak "Cannot open $Ndic:$!";
+    tie %Vdic, 'DB_File', $Vdic, O_RDONLY, 0644, $DB_HASH
+        or croak "Cannot open $Vdic:$!";
+    tie %ncv2score, 'DB_File', $ncv2score, O_RDONLY, 0644, $DB_HASH
+        or croak "Cannot open $ncv2score:$!";
+}
 
 package COOC;
 

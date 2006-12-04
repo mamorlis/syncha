@@ -1,13 +1,13 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/env perl
 
 package NTT;
 
 use strict;
-use DB_File;
+use warnings;
 
 # my $miscPath = $ENV{PWD}.'/'.__FILE__; 
 my $miscPath = __FILE__;
- $miscPath =~ s|//|/|g;
+$miscPath =~ s|//|/|g;
 $miscPath =~ s|/\./|/|g; $miscPath =~ s|[^/]+$||;
 my $rootPath = $miscPath; $rootPath =~ s|[^/]+/$||; $rootPath =~ s|[^/]+/$||;
 my $dbPath = $rootPath.'../dict/db/';
@@ -15,21 +15,60 @@ my $dbPath = $rootPath.'../dict/db/';
 # my $ZERO_DAT_PATH = $ENV{ZERO_DAT_PATH};
 #my $EXO_PATH = $ENV{'EXO_PATH'} or die $!;
 
-
 my $N2C  = $dbPath.'/NTT_N2C.db';
-# print STDERR $N2C, "\n";
 my $path = $dbPath.'/path.db';
 my $ga   = $dbPath.'/ga_vframe.db';
 my $wo   = $dbPath.'/wo_vframe.db';
 my $ni   = $dbPath.'/ni_vframe.db';
-tie my %N2C,  'DB_File', $N2C,  O_RDONLY, 0444, $DB_HASH or die $!;
-tie my %path, 'DB_File', $path, O_RDONLY, 0444, $DB_HASH or die $!;
-tie my %ga,   'DB_File', $ga,   O_RDONLY, 0444, $DB_HASH or die $!;
-tie my %wo,   'DB_File', $wo,   O_RDONLY, 0444, $DB_HASH or die $!;
-tie my %ni,   'DB_File', $ni,   O_RDONLY, 0444, $DB_HASH or die $!;
-
 my $v2c  = $dbPath.'/NTT_v2c.db';
-tie my %v2c,  'DB_File', $v2c,  O_RDONLY, 0444, $DB_HASH or die $!;
+
+my (%N2C, %path, %ga, %wo, %ni, %v2c);
+
+BEGIN {
+    unless (eval "use BerkeleyDB; 1") {
+        use DB_File;
+    }
+}
+
+if (eval "require BerkeleyDB; 1") {
+    tie %N2C, 'BerkeleyDB::Hash',
+        -Filename => $N2C,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or die $!;
+    tie %path, 'BerkeleyDB::Hash',
+        -Filename => $path,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or die $!;
+    tie %ga, 'BerkeleyDB::Hash',
+        -Filename => $ga,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or die $!;
+    tie %wo, 'BerkeleyDB::Hash',
+        -Filename => $wo,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or die $!;
+    tie %ni, 'BerkeleyDB::Hash',
+        -Filename => $ni,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or die $!;
+    tie %v2c, 'BerkeleyDB::Hash',
+        -Filename => $v2c,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or die $!;
+} elsif (eval "require DB_File; 1") {
+    tie %N2C,  'DB_File', $N2C,  O_RDONLY, 0444, $DB_HASH or die $!;
+    tie %path, 'DB_File', $path, O_RDONLY, 0444, $DB_HASH or die $!;
+    tie %ga,   'DB_File', $ga,   O_RDONLY, 0444, $DB_HASH or die $!;
+    tie %wo,   'DB_File', $wo,   O_RDONLY, 0444, $DB_HASH or die $!;
+    tie %ni,   'DB_File', $ni,   O_RDONLY, 0444, $DB_HASH or die $!;
+    tie %v2c,  'DB_File', $v2c,  O_RDONLY, 0444, $DB_HASH or die $!;
+}
 
 sub check_verb_class {
     my $b = shift;

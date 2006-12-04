@@ -1,6 +1,7 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/env perl
 
 use strict;
+use warnings;
 
 my $scriptPath = $ENV{PWD}.'/'.__FILE__; 
 $scriptPath =~ s|/\./|/|g; $scriptPath =~ s|[^/]+$||;

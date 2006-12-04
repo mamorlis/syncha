@@ -1,6 +1,7 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/env perl
 
 use strict;
+use warnings;
 use Getopt::Std;
 use GDBM_File;
 

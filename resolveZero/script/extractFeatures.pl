@@ -1,6 +1,7 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/env perl
 
 use strict;
+use warnings;
 
 # my $ZERO_PATH = $ENV{ZERO_PATH};
 # unshift @INC, $ZERO_PATH.'/ver0/';

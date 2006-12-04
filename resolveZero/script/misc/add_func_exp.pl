@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/env perl
 # ===================================================================
 my $NAME         = 'add_func_exp.pl';
 my $AUTHOR       = 'Ryu IIDA';
@@ -7,6 +7,7 @@ my $PURPOSE      = 'Cab.pmの中で機能語相当語になる文字列に情報を付与';
 # ===================================================================
 
 use strict;
+use warnings;
 
 package FUNC_EXP;
 

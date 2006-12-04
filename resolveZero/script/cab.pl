@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/env perl
 # ===================================================================
 my $NAME         = 'Cab.pm';
 my $AUTHOR       = 'Ryu IIDA';
@@ -7,9 +7,13 @@ my $PURPOSE      = 'CaboChaで構文解析した結果からオブジェクトを作成';
 # ===================================================================
 
 use strict;
-use DB_File;
+use warnings;
 
-
+BEGIN {
+    unless (eval "use BerkeleyDB; 1") {
+        use DB_File;
+    }
+}
 
 # my $scriptPath = $ENV{PWD}.'/'.__FILE__; 
 my $scriptPath = __FILE__; $scriptPath =~ s|//|/|g;
@@ -32,7 +36,16 @@ require 'check_pronoun_type.pl';
 require 'add_func_exp.pl';
 
 my $rengo = $dbPath.'/rengo.db';
-tie my %rengo, 'DB_File', $rengo, O_RDONLY, 0444, $DB_HASH or die $!;
+my %rengo;
+if (eval "require BerkeleyDB; 1") {
+    tie %rengo, 'BerkeleyDB::Hash',
+        -Filename => $rengo,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or die $!;
+} elsif (eval "require DB_File; 1") {
+    tie %rengo, 'DB_File', $rengo, O_RDONLY, 0444, $DB_HASH or die $!;
+}
 
 sub open_cab_file {
     my $file = shift;

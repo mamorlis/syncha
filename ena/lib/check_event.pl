@@ -60,7 +60,7 @@ sub new {
     }
 
     # SVM-Light is not supported -- assumes TinySVM installed
-    my @classify = ("/usr/bin/svm_classify", "-V",
+    my @classify = ("svm_classify", "-V",
                     "$test_file" , "$model_file");
 
     # (2)

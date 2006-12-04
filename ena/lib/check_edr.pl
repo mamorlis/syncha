@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/env perl
 # ===================================================================
 my $NAME         = 'check_edr.pl';
 my $AUTHOR       = 'Ryu IIDA';
@@ -9,15 +9,34 @@ my $PURPOSE      = 'EDR辞書の人間，人間の属性以下の語彙かどうかのcheck';
 package EDR;
 
 use strict;
-use DB_File;
+use warnings;
+BEGIN {
+    unless (eval "use BerkeleyDB; 1") {
+        use DB_File;
+    }
+}
 
 use ENA::Conf;
 my $hum = "$ENV{ENA_DB_DIR}/edr_person.db";
 my $org = "$ENV{ENA_DB_DIR}/edr_org.db";
-tie my %hum, 'DB_File', $hum, O_RDONLY, 0444, $DB_HASH
-    or die "Cannot open $hum:$!";
-tie my %org, 'DB_File', $org, O_RDONLY, 0444, $DB_HASH
-    or die "Cannot open $org:$!";
+my (%hum, %org);
+if (eval "require BerkeleyDB; 1") {
+    tie %hum, 'BerkeleyDB::Hash', 
+        -Filename => $hum,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or die "Cannot open $hum:$!";
+    tie %org, 'BerkeleyDB::Hash',
+        -Filename => $org,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or die "Cannot open $org:$!";
+} elsif (eval "require DB_File; 1") {
+    tie %hum, 'DB_File', $hum, O_RDONLY, 0444, $DB_HASH
+        or die "Cannot open $hum:$!";
+    tie %org, 'DB_File', $org, O_RDONLY, 0444, $DB_HASH
+        or die "Cannot open $org:$!";
+}
 
 # [in ] NOUN
 # [out] 1:person ; 0:otherwise

@@ -1,7 +1,7 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/env perl
 
 use strict;
-use GDBM_File;
+use warnings;
 
 my $scriptPath = $ENV{PWD}.'/'.__FILE__; 
 $scriptPath =~ s|/\./|/|g; $scriptPath =~ s|[^/]+$||;
@@ -835,18 +835,6 @@ sub open_model_all {
     return @m;
 }
 
-sub open_f2n_inter_svm_t {
-    my $dir = shift;
-    tie my %f2n_t, 'GDBM_File', $dir.'/f2n_t.gdbm', GDBM_READER, 0644 or die $!;
-    return \%f2n_t;
-}
-
-sub open_f2n_inter_svm {
-    my $dir = shift; my $t = shift;
-    tie my %f2n_t, 'GDBM_File', $dir.'/f2n_t'.$t.'.gdbm', GDBM_READER, 0644 or die $!;
-    return \%f2n_t;
-}
-
 sub ext_ants {
     my $pred = shift; my $case = shift; my @c = @_;
     my @tmp = ();
@@ -1115,20 +1103,6 @@ sub open_model_svml {
 #     print STDERR map "$_\n", @file;
 
     return @file;
-}
-
-sub open_f2n_t_svml {
-    my $dir = shift;
-    my $file = $dir.'/f2n_t.gdbm';
-    tie my %f2n, 'GDBM_File', $file, GDBM_READER, 0644 or die $!;
-    return \%f2n;
-}
-
-sub open_f2n_svml {
-    my $dir = shift;
-    my $file = $dir.'/f2n.gdbm';
-    tie my %f2n, 'GDBM_File', $file, GDBM_READER, 0644 or die $!;
-    return \%f2n;
 }
 
 sub modify_fe_svml {

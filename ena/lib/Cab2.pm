@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/env perl
 # ===================================================================
 my $NAME         = 'Cab.pm';
 my $AUTHOR       = 'Ryu IIDA';
@@ -8,7 +8,12 @@ my $PURPOSE      = 'CaboChaで構文解析した結果からオブジェクトを作成';
 # ===================================================================
 
 use strict;
-use DB_File;
+use warnings;
+BEGIN {
+    unless (eval "use BerkeleyDB; 1") {
+        use DB_File;
+    }
+}
 
 use ENA::Conf;
 require 'check_edr.pl';
@@ -16,7 +21,16 @@ require 'check_pronoun_type.pl';
 require 'add_func_exp.pl';
 
 my $rengo = "$ENV{ENA_DB_DIR}/rengo.db";
-tie my %rengo, 'DB_File', $rengo, O_RDONLY, 0644 or die $!;
+my %rengo;
+if (eval "require BerkeleyDB; 1") {
+    tie %rengo, 'BerkeleyDB::Hash',
+            -Filename => $rengo,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0644
+            or die $!;
+} elsif (eval "require DB_File; 1") {
+    tie %rengo, 'DB_File', $rengo, O_RDONLY, 0644 or die $!;
+}
 
 package Cab;
 

@@ -513,12 +513,25 @@ use warnings;
 use Carp qw(carp croak);
 use vars qw($VERBOSE);
 
-use DB_File;
+BEGIN {
+    unless (eval "use BerkeleyDB; 1") {
+        use DB_File;
+    }
+}
 
 #my $bgh_file = "/cl/nldata/bgh/bgh96/orgdata/sakuin";
 my $bgh_file = "$ENV{ENA_DB_DIR}/bgh96-2.db";
-tie my %bgh_dic, 'DB_File', $bgh_file, O_RDONLY
-    or croak "Cannot open Bunrui Goi Hyou: $!\n";
+
+my %bgh_dic;
+if (eval "require BerkeleyDB; 1") {
+    tie %bgh_dic, 'BerkeleyDB::Hash',
+        -Filename => $bgh_file,
+        -Flags    => DB_RDONLY
+        or croak "Cannot open Bunrui Goi Hyou: $!\n";
+} elsif (eval "require DB_File; 1") {
+    tie %bgh_dic, 'DB_File', $bgh_file, O_RDONLY
+        or croak "Cannot open Bunrui Goi Hyou: $!\n";
+}
 
 sub get_class_id {
     my $word = shift;
@@ -549,23 +562,47 @@ use strict;
 use warnings;
 use Carp;
 
-use DB_File;
+BEGIN {
+    unless (eval "use BerkeleyDB; 1") {
+        use DB_File;
+    }
+}
 
 #my $jcc_file = "/cl/nldata/EDR/EDR1.5/JCD/JCC.DIC"; # 共起辞書
 my $jcp_file = "/cl/nldata/EDR/EDR1.5/JCD/JCP.DIC"; # 共起パターン辞書
 my $cpc_file = "/cl/nldata/EDR/EDR1.5/CD/CPC.DIC";  # 概念体系辞書
 my $cph_file = "/cl/nldata/EDR/EDR1.5/CD/CPH.DIC";  # 概念辞書
 #Readonly::Scalar my $jcc_db => 'bdb/jcc.db';
+#tie %jcc_dic, 'DB_File', $jcc_db or die "Cannot open $jcc_db";
 my $jcp_db = "$ENV{ENA_DB_DIR}/jcp.db";
 my $cpc_db = "$ENV{ENA_DB_DIR}/cpc.db";
 my $cph_db = "$ENV{ENA_DB_DIR}/cph.db";
-#tie my %jcc_dic, 'DB_File', $jcc_db or die "Cannot open $jcc_db";
-tie my %jcp_dic, 'DB_File', $jcp_db, O_RDONLY, 0644
-    or croak "Cannot open $jcp_db";
-tie my %cpc_dic, 'DB_File', $cpc_db, O_RDONLY, 0644
-    or croak "Cannot open $cpc_db";
-tie my %cph_dic, 'DB_File', $cph_db, O_RDONLY, 0644
-    or croak "Cannot open $cph_db";
+my (%jcp_dic, %cpc_dic, %cph_dic);
+if (eval "require BerkeleyDB; 1") {
+    tie %jcp_dic, 'BerkeleyDB::Hash',
+        -Filename => $jcp_db,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or croak "Cannot open $jcp_db:$!";
+    tie %cpc_dic, 'BerkeleyDB::Hash',
+        -Filename => $cpc_db,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or croak "Cannot open $cpc_db:$!";
+    tie %cph_dic, 'BerkeleyDB::Hash',
+        -Filename => $cph_db,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0444
+        or croak "Cannot open $cph_db:$!";
+} elsif (eval "require DB_File; 1") {
+    tie %jcp_dic, 'DB_File', $jcp_db, O_RDONLY, 0644
+        or croak "Cannot open $jcp_db";
+    tie %cpc_dic, 'DB_File', $cpc_db, O_RDONLY, 0644
+        or croak "Cannot open $cpc_db";
+    tie %cph_dic, 'DB_File', $cph_db, O_RDONLY, 0644
+        or croak "Cannot open $cph_db";
+}
+
 use vars qw($DEBUG);
 
 # $concept_system->[レベル1項目の番号][レベル2項目の番号]
@@ -846,18 +883,41 @@ sub get_cooc {
 }
 
 # taken from calc_mi.pl
-use DB_File;
-my $Ndic = "$ENV{ENA_DB_DIR}/n2id.db";
-my $Vdic = "$ENV{ENA_DB_DIR}/v2id.db";
+BEGIN {
+    unless (eval "use BerkeleyDB; 1") {
+        use DB_File;
+    }
+}
 
-tie my %Ndic, 'DB_File', $Ndic, O_RDONLY, 0644
-    or croak "Cannot open $Ndic:$!";
-tie my %Vdic, 'DB_File', $Vdic, O_RDONLY, 0644
-    or croak "Cannot open $Vdic:$!";
+my $Ndic      = "$ENV{ENA_DB_DIR}/n2id.db";
+my $Vdic      = "$ENV{ENA_DB_DIR}/v2id.db";
+my $ncv2score = "$ENV{ENA_DB_DIR}/ncv2score.db";
 
-my $ncv2file = "$ENV{ENA_DB_DIR}/ncv2score.db";
-tie my %ncv2score, 'DB_File', $ncv2file, O_RDONLY, 0644
-    or croak "Cannot open $ncv2file:$!";
+my (%Ndic, %Vdic, %ncv2score);
+if (eval "require BerkeleyDB; 1") {
+    tie %Ndic, 'BerkeleyDB::Hash',
+        -Filename => $Ndic,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0644
+        or croak "Cannot open $Ndic:$!";
+    tie %Vdic, 'BerkeleyDB::Hash',
+        -Filename => $Vdic,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0644
+        or croak "Cannot open $Vdic:$!";
+    tie %ncv2score, 'BerkeleyDB::Hash',
+        -Filename => $ncv2score,
+        -Flags    => DB_RDONLY,
+        -Mode     => 0644
+        or croak "Cannot open $ncv2score:$!";
+} elsif (eval "require DB_File; 1") {
+    tie my %Ndic, 'DB_File', $Ndic, O_RDONLY, 0644
+        or croak "Cannot open $Ndic:$!";
+    tie my %Vdic, 'DB_File', $Vdic, O_RDONLY, 0644
+        or croak "Cannot open $Vdic:$!";
+    tie my %ncv2score, 'DB_File', $ncv2score, O_RDONLY, 0644
+        or croak "Cannot open $ncv2score:$!";
+}
 
 sub get_noun_word_form {
     my $morph = shift;
