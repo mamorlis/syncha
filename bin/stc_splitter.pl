@@ -1,4 +1,4 @@
-#! /usr/local/bin/perl -w
+#! /usr/bin/env perl
 
 #------------------------------------------------------
 # 入力ファイルの文字コードはeuc-jpと仮定．
@@ -6,6 +6,7 @@
 #------------------------------------------------------
 
 use strict;
+use warnings;
 
 use Getopt::Std;
 use vars qw($opt_h);
