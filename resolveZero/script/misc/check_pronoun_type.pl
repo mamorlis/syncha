@@ -22,14 +22,17 @@ my $dbPath = $rootPath.'../dict/db/';
 my $pronoun = $dbPath.'/pronoun.db';
 
 my %pronoun;
-if (eval "require BerkeleyDB; 1") {
-    tie %pronoun, 'BerkeleyDB::Hash',
-        -Filename => $pronoun,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0444
-        or die $!;
-} elsif (eval "require DB_File; 1") {
-    tie %pronoun, 'DB_File', $pronoun, O_RDONLY, 0444, $DB_HASH or die $!;
+{
+    no strict "subs";
+    if (eval "require BerkeleyDB; 1") {
+        tie %pronoun, 'BerkeleyDB::Hash',
+            -Filename => $pronoun,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0444
+            or die $!;
+    } elsif (eval "require DB_File; 1") {
+        tie %pronoun, 'DB_File', $pronoun, O_RDONLY, 0444, $DB_HASH or die $!;
+    }
 }
 
 sub check_pronoun_type {

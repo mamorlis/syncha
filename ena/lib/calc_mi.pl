@@ -16,29 +16,32 @@ my $Vdic      = "$ENV{ENA_DB_DIR}/v2id.db";
 my $ncv2score = "$ENV{ENA_DB_DIR}/ncv2score.db";
 
 my (%Ndic, %Vdic, %ncv2score);
-if (eval "require BerkeleyDB; 1") {
-    tie %Ndic, 'BerkeleyDB::Hash',
-        -Filename => $Ndic,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0644
-        or croak "Cannot open $Ndic:$!";
-    tie %Vdic, 'BerkeleyDB::Hash',
-        -Filename => $Vdic,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0644
-        or croak "Cannot open $Vdic:$!";
-    tie %ncv2score, 'BerkeleyDB::Hash',
-        -Filename => $ncv2score,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0644,
-        or croak "Cannot open $ncv2score:$!";
-} elsif (eval "require DB_File; 1") {
-    tie %Ndic, 'DB_File', $Ndic, O_RDONLY, 0644, $DB_HASH
-        or croak "Cannot open $Ndic:$!";
-    tie %Vdic, 'DB_File', $Vdic, O_RDONLY, 0644, $DB_HASH
-        or croak "Cannot open $Vdic:$!";
-    tie %ncv2score, 'DB_File', $ncv2score, O_RDONLY, 0644, $DB_HASH
-        or croak "Cannot open $ncv2score:$!";
+{
+    no strict "subs";
+    if (eval "require BerkeleyDB; 1") {
+        tie %Ndic, 'BerkeleyDB::Hash',
+            -Filename => $Ndic,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0644
+            or croak "Cannot open $Ndic:$!";
+        tie %Vdic, 'BerkeleyDB::Hash',
+            -Filename => $Vdic,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0644
+            or croak "Cannot open $Vdic:$!";
+        tie %ncv2score, 'BerkeleyDB::Hash',
+            -Filename => $ncv2score,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0644,
+            or croak "Cannot open $ncv2score:$!";
+    } elsif (eval "require DB_File; 1") {
+        tie %Ndic, 'DB_File', $Ndic, O_RDONLY, 0644, $DB_HASH
+            or croak "Cannot open $Ndic:$!";
+        tie %Vdic, 'DB_File', $Vdic, O_RDONLY, 0644, $DB_HASH
+            or croak "Cannot open $Vdic:$!";
+        tie %ncv2score, 'DB_File', $ncv2score, O_RDONLY, 0644, $DB_HASH
+            or croak "Cannot open $ncv2score:$!";
+    }
 }
 
 package COOC;

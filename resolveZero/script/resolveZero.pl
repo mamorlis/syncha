@@ -35,14 +35,17 @@ require 'cab.pl';
 use FindBin qw($Bin);
 my $v2type = $Bin.'/../../dict/db/v2type.db';
 my %db;
-if (eval "require BerkeleyDB; 1") {
-    tie %db, 'BerkeleyDB::Hash',
-        -Filename => $v2type;
-        -Flags    => DB_RDONLY,
-        -Mode     => 0444
-        or die $!;
-} elsif (eval "require DB_File; 1") {
-    tie %db, 'DB_File', $v2type, O_RDONLY, 0644 or die $!;
+{
+    no strict "subs";
+    if (eval "require BerkeleyDB; 1") {
+        tie %db, 'BerkeleyDB::Hash',
+            -Filename => $v2type;
+            -Flags    => DB_RDONLY,
+            -Mode     => 0444
+            or die $!;
+    } elsif (eval "require DB_File; 1") {
+        tie %db, 'DB_File', $v2type, O_RDONLY, 0644 or die $!;
+    }
 }
 
 my $rootPath = $scriptPath; $rootPath =~ s|[^/]+/$||;

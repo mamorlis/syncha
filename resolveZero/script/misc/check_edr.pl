@@ -29,20 +29,23 @@ my $hum = $dbPath.'/edr_person.db';
 my $org = $dbPath.'/edr_org.db';
 
 my (%hum, %org);
-if (eval "require BerkeleyDB; 1") {
-    tie %hum, 'BerkeleyDB::Hash',
-        -Filename => $hum,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0444
-        or die $!;
-    tie %org, 'BerkeleyDB::Hash',
-        -Filename => $org,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0444
-        or die $!;
-} elsif (eval "require DB_File; 1") {
-    tie %hum, 'DB_File', $hum, O_RDONLY, 0444, $DB_HASH or die $!;
-    tie %org, 'DB_File', $org, O_RDONLY, 0444, $DB_HASH or die $!;
+{
+    no strict "subs";
+    if (eval "require BerkeleyDB; 1") {
+        tie %hum, 'BerkeleyDB::Hash',
+            -Filename => $hum,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0444
+            or die $!;
+        tie %org, 'BerkeleyDB::Hash',
+            -Filename => $org,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0444
+            or die $!;
+    } elsif (eval "require DB_File; 1") {
+        tie %hum, 'DB_File', $hum, O_RDONLY, 0444, $DB_HASH or die $!;
+        tie %org, 'DB_File', $org, O_RDONLY, 0444, $DB_HASH or die $!;
+    }
 }
 
 # [in ] NOUN

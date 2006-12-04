@@ -523,14 +523,17 @@ BEGIN {
 my $bgh_file = "$ENV{ENA_DB_DIR}/bgh96-2.db";
 
 my %bgh_dic;
-if (eval "require BerkeleyDB; 1") {
-    tie %bgh_dic, 'BerkeleyDB::Hash',
-        -Filename => $bgh_file,
-        -Flags    => DB_RDONLY
-        or croak "Cannot open Bunrui Goi Hyou: $!\n";
-} elsif (eval "require DB_File; 1") {
-    tie %bgh_dic, 'DB_File', $bgh_file, O_RDONLY
-        or croak "Cannot open Bunrui Goi Hyou: $!\n";
+{
+    no strict "subs";
+    if (eval "require BerkeleyDB; 1") {
+        tie %bgh_dic, 'BerkeleyDB::Hash',
+            -Filename => $bgh_file,
+            -Flags    => DB_RDONLY
+            or croak "Cannot open Bunrui Goi Hyou: $!\n";
+    } elsif (eval "require DB_File; 1") {
+        tie %bgh_dic, 'DB_File', $bgh_file, O_RDONLY
+            or croak "Cannot open Bunrui Goi Hyou: $!\n";
+    }
 }
 
 sub get_class_id {
@@ -578,29 +581,32 @@ my $jcp_db = "$ENV{ENA_DB_DIR}/jcp.db";
 my $cpc_db = "$ENV{ENA_DB_DIR}/cpc.db";
 my $cph_db = "$ENV{ENA_DB_DIR}/cph.db";
 my (%jcp_dic, %cpc_dic, %cph_dic);
-if (eval "require BerkeleyDB; 1") {
-    tie %jcp_dic, 'BerkeleyDB::Hash',
-        -Filename => $jcp_db,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0444
-        or croak "Cannot open $jcp_db:$!";
-    tie %cpc_dic, 'BerkeleyDB::Hash',
-        -Filename => $cpc_db,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0444
-        or croak "Cannot open $cpc_db:$!";
-    tie %cph_dic, 'BerkeleyDB::Hash',
-        -Filename => $cph_db,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0444
-        or croak "Cannot open $cph_db:$!";
-} elsif (eval "require DB_File; 1") {
-    tie %jcp_dic, 'DB_File', $jcp_db, O_RDONLY, 0644
-        or croak "Cannot open $jcp_db";
-    tie %cpc_dic, 'DB_File', $cpc_db, O_RDONLY, 0644
-        or croak "Cannot open $cpc_db";
-    tie %cph_dic, 'DB_File', $cph_db, O_RDONLY, 0644
-        or croak "Cannot open $cph_db";
+{
+    no strict "subs";
+    if (eval "require BerkeleyDB; 1") {
+        tie %jcp_dic, 'BerkeleyDB::Hash',
+            -Filename => $jcp_db,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0444
+            or croak "Cannot open $jcp_db:$!";
+        tie %cpc_dic, 'BerkeleyDB::Hash',
+            -Filename => $cpc_db,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0444
+            or croak "Cannot open $cpc_db:$!";
+        tie %cph_dic, 'BerkeleyDB::Hash',
+            -Filename => $cph_db,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0444
+            or croak "Cannot open $cph_db:$!";
+    } elsif (eval "require DB_File; 1") {
+        tie %jcp_dic, 'DB_File', $jcp_db, O_RDONLY, 0644
+            or croak "Cannot open $jcp_db";
+        tie %cpc_dic, 'DB_File', $cpc_db, O_RDONLY, 0644
+            or croak "Cannot open $cpc_db";
+        tie %cph_dic, 'DB_File', $cph_db, O_RDONLY, 0644
+            or croak "Cannot open $cph_db";
+    }
 }
 
 use vars qw($DEBUG);
@@ -894,29 +900,32 @@ my $Vdic      = "$ENV{ENA_DB_DIR}/v2id.db";
 my $ncv2score = "$ENV{ENA_DB_DIR}/ncv2score.db";
 
 my (%Ndic, %Vdic, %ncv2score);
-if (eval "require BerkeleyDB; 1") {
-    tie %Ndic, 'BerkeleyDB::Hash',
-        -Filename => $Ndic,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0644
-        or croak "Cannot open $Ndic:$!";
-    tie %Vdic, 'BerkeleyDB::Hash',
-        -Filename => $Vdic,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0644
-        or croak "Cannot open $Vdic:$!";
-    tie %ncv2score, 'BerkeleyDB::Hash',
-        -Filename => $ncv2score,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0644
-        or croak "Cannot open $ncv2score:$!";
-} elsif (eval "require DB_File; 1") {
-    tie my %Ndic, 'DB_File', $Ndic, O_RDONLY, 0644
-        or croak "Cannot open $Ndic:$!";
-    tie my %Vdic, 'DB_File', $Vdic, O_RDONLY, 0644
-        or croak "Cannot open $Vdic:$!";
-    tie my %ncv2score, 'DB_File', $ncv2score, O_RDONLY, 0644
-        or croak "Cannot open $ncv2score:$!";
+{
+    no strict "subs";
+    if (eval "require BerkeleyDB; 1") {
+        tie %Ndic, 'BerkeleyDB::Hash',
+            -Filename => $Ndic,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0644
+            or croak "Cannot open $Ndic:$!";
+        tie %Vdic, 'BerkeleyDB::Hash',
+            -Filename => $Vdic,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0644
+            or croak "Cannot open $Vdic:$!";
+        tie %ncv2score, 'BerkeleyDB::Hash',
+            -Filename => $ncv2score,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0644
+            or croak "Cannot open $ncv2score:$!";
+    } elsif (eval "require DB_File; 1") {
+        tie my %Ndic, 'DB_File', $Ndic, O_RDONLY, 0644
+            or croak "Cannot open $Ndic:$!";
+        tie my %Vdic, 'DB_File', $Vdic, O_RDONLY, 0644
+            or croak "Cannot open $Vdic:$!";
+        tie my %ncv2score, 'DB_File', $ncv2score, O_RDONLY, 0644
+            or croak "Cannot open $ncv2score:$!";
+    }
 }
 
 sub get_noun_word_form {

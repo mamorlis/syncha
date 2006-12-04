@@ -22,14 +22,17 @@ require 'add_func_exp.pl';
 
 my $rengo = "$ENV{ENA_DB_DIR}/rengo.db";
 my %rengo;
-if (eval "require BerkeleyDB; 1") {
-    tie %rengo, 'BerkeleyDB::Hash',
-            -Filename => $rengo,
-            -Flags    => DB_RDONLY,
-            -Mode     => 0644
-            or die $!;
-} elsif (eval "require DB_File; 1") {
-    tie %rengo, 'DB_File', $rengo, O_RDONLY, 0644 or die $!;
+{
+    no strict "subs";
+    if (eval "require BerkeleyDB; 1") {
+        tie %rengo, 'BerkeleyDB::Hash',
+                -Filename => $rengo,
+                -Flags    => DB_RDONLY,
+                -Mode     => 0644
+                or die $!;
+    } elsif (eval "require DB_File; 1") {
+        tie %rengo, 'DB_File', $rengo, O_RDONLY, 0644 or die $!;
+    }
 }
 
 package Cab;

@@ -37,14 +37,17 @@ require 'add_func_exp.pl';
 
 my $rengo = $dbPath.'/rengo.db';
 my %rengo;
-if (eval "require BerkeleyDB; 1") {
-    tie %rengo, 'BerkeleyDB::Hash',
-        -Filename => $rengo,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0444
-        or die $!;
-} elsif (eval "require DB_File; 1") {
-    tie %rengo, 'DB_File', $rengo, O_RDONLY, 0444, $DB_HASH or die $!;
+{
+    no strict "subs";
+    if (eval "require BerkeleyDB; 1") {
+        tie %rengo, 'BerkeleyDB::Hash',
+            -Filename => $rengo,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0444
+            or die $!;
+    } elsif (eval "require DB_File; 1") {
+        tie %rengo, 'DB_File', $rengo, O_RDONLY, 0444, $DB_HASH or die $!;
+    }
 }
 
 sub open_cab_file {

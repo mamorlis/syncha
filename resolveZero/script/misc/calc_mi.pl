@@ -22,20 +22,23 @@ my $Ndic = $modelPath.'n2id.db';
 my $Vdic = $modelPath.'v2id.db';
 
 my (%Ndic, %Vdic);
-if (eval "require BerkeleyDB; 1") {
-    tie %Ndic, 'BerkeleyDB::Btree',
-        -Filename => $Ndic,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0444
-        or die $!;
-    tie %Vdic, 'BerkeleyDB::Btree',
-        -Filename => $Vdic,
-        -Flags    => DB_RDONLY,
-        -Mode     => 0444
-        or die $!;
-} elsif (eval "require DB_File; 1") {
-    tie %Ndic, 'DB_File', $Ndic, O_RDONLY, 0444, $DB_BTREE or die $!;
-    tie %Vdic, 'DB_File', $Vdic, O_RDONLY, 0444, $DB_BTREE or die $!;
+{
+    no strict "subs";
+    if (eval "require BerkeleyDB; 1") {
+        tie %Ndic, 'BerkeleyDB::Btree',
+            -Filename => $Ndic,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0444
+            or die $!;
+        tie %Vdic, 'BerkeleyDB::Btree',
+            -Filename => $Vdic,
+            -Flags    => DB_RDONLY,
+            -Mode     => 0444
+            or die $!;
+    } elsif (eval "require DB_File; 1") {
+        tie %Ndic, 'DB_File', $Ndic, O_RDONLY, 0444, $DB_BTREE or die $!;
+        tie %Vdic, 'DB_File', $Vdic, O_RDONLY, 0444, $DB_BTREE or die $!;
+    }
 }
 
 package COOC;
