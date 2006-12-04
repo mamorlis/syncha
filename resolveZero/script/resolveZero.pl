@@ -39,12 +39,13 @@ my %db;
     no strict "subs";
     if (eval "require BerkeleyDB; 1") {
         tie %db, 'BerkeleyDB::Hash',
-            -Filename => $v2type;
+            -Filename => $v2type,
             -Flags    => DB_RDONLY,
             -Mode     => 0444
-            or die $!;
+            or die "Cannot open $v2type:$!";
     } elsif (eval "require DB_File; 1") {
-        tie %db, 'DB_File', $v2type, O_RDONLY, 0644 or die $!;
+        tie %db, 'DB_File', $v2type, O_RDONLY, 0644
+            or die "Cannot open $v2type:$!";
     }
 }
 
