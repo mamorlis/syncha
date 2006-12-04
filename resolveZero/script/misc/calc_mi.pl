@@ -53,7 +53,7 @@ sub calc_mi {
     return '' unless ($nid); return '' unless ($vid);
     my $in = $nwf.':'.$vwf;
 
-    my $tool = $ncvtoolPath.'/scorer';
+    my $tool = 'scorer';
     my $res = `echo \"$in\" | $tool -u 3 -d $modelPath/n1000 -m Pos -p $TYPE`; #"
     my $score = $res; $score =~ s/\n//g;
     return '' if ($score eq '4294967295');
