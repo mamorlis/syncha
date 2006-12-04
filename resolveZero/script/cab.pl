@@ -540,7 +540,6 @@ sub new {
         $self->opinion($opinion);
   	$self->dtr($dref);	
   	$self->ZERO('');
-        $self->opinion($opinion);
     } else { # init
 	$self->id('');	
 	$self->dep('');
@@ -2301,7 +2300,9 @@ sub puts_mod {
 	$out .= '-1';
     }
     $out .= $self->dep_type.' '.
-	    $self->head.'/'.$self->func.' '.$self->weight.' '.$self->opinion."\n";
+	    $self->head.'/'.$self->func.' '.
+            $self->weight.' '.
+            $self->opinion."\n";
 
     for (my $i = 0; $i < @m; $i++) {
 	$out .= $m[$i]->puts;
@@ -2349,7 +2350,7 @@ sub new {
 	    my $head     = $4; # 主辞となる内容語の形態素ID
 	    my $func     = $5; # 機能語の形態素ID
 	    my $weight   = $6;
-            my $opinion  = $7;
+            my $opinion  = $7 || '';
 	    push @{$dtr{$2}}, $1;
 	    my @dtr = (); 
 	    for my $d (@{$dtr{$id}}) { push @dtr, $cab[$d]; }
