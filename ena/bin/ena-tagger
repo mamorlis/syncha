@@ -31,8 +31,7 @@ use Data::Dumper;
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
 use ENA;
-
-require 'check_event.pl';
+use ENA::Event;
 
 use File::Temp qw(tempdir);
 my $temp_dir = tempdir( CLEANUP => 1 );
@@ -47,7 +46,7 @@ die $usage if @ARGV < 1;
 my $cab_file   = shift;
 my $model_file = (@ARGV eq 2) ? shift : "$Bin/../dat/mod/train.svmmodel";
 my $mod = Mod->new_file("$cab_file");
-my $check_event = new Check::Event ($model_file, $mod);
+my $ena_event = new ENA::Event ($model_file, $mod);
 my $morph_id = 0;
 for my $text (@{ $mod->txt }) {
     for my $sentence (@{ $text->Sentence }) {
@@ -61,7 +60,7 @@ for my $text (@{ $mod->txt }) {
                 # とりあえずサ変のみ
                 # (本当は「動き」のようなものも入れたい)
                 if ($morph->POS =~ m/^名詞-サ変/) {
-                    print "\tEVENT" if $check_event->is_event($morph_id);
+                    print "\tEVENT" if $ena_event->is_event($morph_id);
                 }
                 print "\n";
 

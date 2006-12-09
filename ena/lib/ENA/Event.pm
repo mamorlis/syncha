@@ -12,7 +12,7 @@
 use strict;
 use warnings;
 
-package Check::Event;
+package ENA::Event;
 
 use Carp qw(croak carp);
 use Data::Dumper;

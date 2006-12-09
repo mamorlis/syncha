@@ -1,7 +1,9 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 # ご意見かどうか判定するモジュール
 #
+
+package ENA::Opinion;
 
 use strict;
 use warnings;

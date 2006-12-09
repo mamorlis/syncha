@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-package PRONOUN;
+package ENA::Pronoun;
 
 use strict;
 use warnings;
@@ -13,7 +13,12 @@ BEGIN {
 use ENA::Conf;
 my $pronoun = "$ENV{ENA_DB_DIR}/pronoun.db";
 my %pronoun;
-{
+
+sub new {
+    my $class = shift;
+    my $self  = {};
+    bless $self, $class;
+
     no strict "subs";
     if (eval "require BerkeleyDB; 1") {
         tie %pronoun, 'BerkeleyDB::Hash',
@@ -25,10 +30,13 @@ my %pronoun;
         tie %pronoun, 'DB_File', $pronoun, O_RDONLY, 0444, $DB_HASH
             or die "Cannot open $pronoun:$!";
     }
+
+    return $self;
 }
 
 sub check_pronoun_type {
-    my $bunsetsu = shift;
+    my ($self, $bunsetsu) = @_;
+
     my $noun = $bunsetsu->HEAD_NOUN;
     my $pos  = $bunsetsu->HEAD_POS;
     my $in   = $noun.':'.$pos;

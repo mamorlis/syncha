@@ -9,31 +9,17 @@ my $PURPOSE      = 'CaboChaで構文解析した結果からオブジェクトを作成';
 
 use strict;
 use warnings;
-BEGIN {
-    unless (eval "use BerkeleyDB; 1") {
-        use DB_File;
-    }
-}
 
 use ENA::Conf;
-require 'check_edr.pl';
-require 'check_pronoun_type.pl';
-require 'add_func_exp.pl';
+use ENA::EDR;
+use ENA::Pronoun;
+use ENA::Rengo;
 
-my $rengo = "$ENV{ENA_DB_DIR}/rengo.db";
-my %rengo;
-{
-    no strict "subs";
-    if (eval "require BerkeleyDB; 1") {
-        tie %rengo, 'BerkeleyDB::Hash',
-                -Filename => $rengo,
-                -Flags    => DB_RDONLY,
-                -Mode     => 0644
-                or die $!;
-    } elsif (eval "require DB_File; 1") {
-        tie %rengo, 'DB_File', $rengo, O_RDONLY, 0644 or die $!;
-    }
-}
+my $ena_edr     = new ENA::EDR;
+my $ena_pronoun = new ENA::Pronoun;
+my $ena_rengo   = new ENA::Rengo;
+
+require 'add_func_exp.pl';
 
 package Cab;
 
@@ -543,7 +529,7 @@ sub set_event_tag {
 # ===================================================================
 package Bunsetsu;
 
-require 'check_opinion.pl';
+use ENA::Opinion;
 
 sub new {
     my $self = {};
@@ -1796,7 +1782,7 @@ sub puts_bunsetsu_label {
     my $out = '';
     $out .= '* '.$self->id.' '.$self->dep_id.$self->dep_type.' '.
             $self->head.'/'.$self->func.' '.$self->weight;
-    $out .= ' O' if is_opinion($self->STRING);
+    $out .= ' O' if ENA::Opinion::is_opinion($self->STRING);
     $out .= "\n";
     return $out;
 }
@@ -2375,10 +2361,10 @@ sub new {
         $cab[$i]->ZERO(&check_zero($cab[$i]));
         $cab[$i]->DEFINITE(&ext_definite($cab[$i]));
         $cab[$i]->PRE_DEFINITE(&ext_pre_definite($cab[$i], @cab));      
-        $cab[$i]->EDR_PERSON(&EDR::check_edr_person($cab[$i]));
-        $cab[$i]->EDR_ORG(&EDR::check_edr_org($cab[$i]));
+        $cab[$i]->EDR_PERSON($ena_edr->check_edr_person($cab[$i]));
+        $cab[$i]->EDR_ORG($ena_edr->check_edr_org($cab[$i]));
         $cab[$i]->ANIMACY(&check_animacy($cab[$i]));
-        $cab[$i]->PRONOUN_TYPE(&PRONOUN::check_pronoun_type($cab[$i]));
+        $cab[$i]->PRONOUN_TYPE($ena_pronoun->check_pronoun_type($cab[$i]));
         $cab[$i]->descendant(&ext_descendant($i, @cab));
         $cab[$i]->DOU(&check_dou($cab[$i]));
 #       $cab[$i]->is_exophora(0);
@@ -2681,7 +2667,7 @@ sub ext_case {
         if ($m->POS =~ /^助詞-格助詞-一般/) {
             $case .= $m->WF unless ($m->WF =~ /^(か|だけ|こそ|など|のみ)$/);
         } elsif ($m->POS =~ /^助詞-格助詞-連語/) {
-            $case .= $rengo{$m->WF};
+            $case .= $ena_rengo->get_rengo($m->WF);
         } elsif ($m->POS =~ /^助詞(?!-接続助詞)/) {
             unless ($m->WF =~ /^(か|だけ|こそ|など|のみ)$/) {
                 $case .= $m->WF;
@@ -2706,7 +2692,7 @@ sub ext_case_h {
         $temp .= $m->WF;
         if ($m->POS =~ /^助詞-格助詞-連語/) {
             if ($m->WF eq 'にとって'){
-                $case .= $rengo{$m->WF};
+                $case .= $ena_rengo->get_rengo($m->WF);
             }else{
                 $case .= $m->WF;
             }

@@ -54,7 +54,7 @@ if (defined $options{m}) {
 my $temp_dir   = tempdir( CLEANUP => 1 );
 
 sub main {
-    my @learn    = ("svm_learn", "-t", "1", "-d", "3",
+    my @learn    = ("svm_learn", "-t", "1", "-d", "1",
                     "$train_file", "$model_file");
 
 	`@learn`    or croak "@learn failed: $?";
