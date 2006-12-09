@@ -28,6 +28,9 @@ use warnings;
 use Carp qw(croak carp);
 use Data::Dumper;
 
+use Getopt::Std;
+use vars qw($opt_t);
+
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
 use ENA;
@@ -37,16 +40,16 @@ use File::Temp qw(tempdir);
 my $temp_dir = tempdir( CLEANUP => 1 );
 
 my $usage = <<__USAGE__;
-USAGE: $0 file.cab [file.svmmodel]
+USAGE: $0 [-t toolkit] file.cab
 __USAGE__
 
 die $usage if @ARGV < 1;
 
 # main
 my $cab_file   = shift;
-my $model_file = (@ARGV eq 2) ? shift : "$Bin/../dat/mod/train.svmmodel";
+my $toolkit    = $opt_t || 'svm_light';
 my $mod = Mod->new_file("$cab_file");
-my $ena_event = new ENA::Event ($model_file, $mod);
+my $ena_event = new ENA::Event ($toolkit, $mod);
 my $morph_id = 0;
 for my $text (@{ $mod->txt }) {
     for my $sentence (@{ $text->Sentence }) {

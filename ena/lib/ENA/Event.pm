@@ -24,10 +24,13 @@ use lib "$Bin/../lib";
 use File::Temp qw(tempfile);
 
 my %score_of;
+my %model_of = ( tinysvm   => "$Bin/../dat/mod/train.svmmodel",
+                 svm_light => "$Bin/../dat/mod/train.svmlmodel",
+);
 
 sub new {
     my $class      = shift;
-    my $model_file = shift;
+    my $toolkit    = shift;
     my $mod        = shift;
     my $self       = {};
     bless $self, $class;
@@ -59,13 +62,30 @@ sub new {
         }
     }
 
-    # SVM-Light is not supported -- assumes TinySVM installed
-    my @classify = ("svm_classify", "-V",
-                    "$test_file" , "$model_file");
+    system("$Bin/sort_features.pl $test_file > $test_file.sorted") == 0
+        or croak "Cannot sort $test_file";
+    rename "$test_file.sorted", "$test_file" or croak "Cannot mv $test_file";
 
+    # Supports either SVM-Light or TinySVM
     # (2)
-    my @scores = split /\n/, `@classify | cut -d' ' -f2`
-        or croak "@classify failed: $?";
+    my @scores;
+    if ($toolkit eq 'tinysvm') {
+        my @classify = ("svm_classify", "-V",
+                        "$test_file" , "$model_of{tinysvm}");
+
+        my @scores = split /\n/, `@classify | cut -d' ' -f2`
+            or croak "@classify failed: $?";
+    } elsif ($toolkit eq 'svm_light') {
+        my $score_file = new File::Temp ( UNLINK => 1 );
+        my @classify = ("svm_light_classify", "-v", "0",
+                        "$test_file" , "$model_of{svm_light}", "$score_file");
+
+        system(@classify) == 0 or croak "Failed to exec @classify:$!";
+        open my $score_fh, '<', $score_file
+            or croak "Cannot open $score_file";
+        @scores = split /\n/, <$score_fh>;
+        close $score_fh;
+    }
 
     # (3)
     for (my $i = 0; $i < @morph_ids; ++$i) {

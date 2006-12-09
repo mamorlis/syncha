@@ -10,14 +10,15 @@ Copyright (C) 2005-2006 Mamoru KOMACHI <mamoru-k@is.naist.jp>
 
 =head1 SYNOPSIS
 
-ena-learn [-m file.svmmodel] file.svmdata
+ena-learn [-t toolkit] [-m file.svmmodel] file.svmdata
 
 =head1 DESCRIPTION
 
 Ena-learn reads SVM features and constructs SVM models for event noun
 annotation. You can obtain features from ena-mkmodel, and feed them
 to this program. You can specify the model file name by -m flag, or
-it is calculated from given data file name.
+it is calculated from given data file name. If you prefer SVM-light,
+you can specify -t svm_light for svm_learn and svm_classify.
 
 =cut
 
@@ -34,10 +35,10 @@ use lib "$Bin/../lib";
 
 use Getopt::Std;
 my %options;
-getopts("hm:", \%options);
+getopts("t:hm:", \%options);
 
 my $usage = <<__USAGE__;
-USAGE: $0 [-m file.svmmodel] file.svmdata
+USAGE: $0 [-t toolkit] [-m file.svmmodel] file.svmdata
 __USAGE__
 
 die $usage if @ARGV ne 1;
@@ -51,13 +52,20 @@ if (defined $options{m}) {
 } else {
     ($model_file = $train_file) =~ s/\.*/\.svmmodel/;
 }
+my @learn;
+if (defined $options{t}) {
+    if ($options{t} eq 'svm_light') {
+        @learn = ("svm_light_learn", "-t", "1", "-d", "1",
+                     "$train_file", "$model_file");
+    } else {
+        @learn = ("svm_learn", "-t", "1", "-d", "1",
+                     "$train_file", "$model_file");
+    }
+}
 my $temp_dir   = tempdir( CLEANUP => 1 );
 
 sub main {
-    my @learn    = ("svm_learn", "-t", "1", "-d", "1",
-                    "$train_file", "$model_file");
-
-	`@learn`    or croak "@learn failed: $?";
+	`@learn` or croak "@learn failed: $?";
 }
 
 main();
