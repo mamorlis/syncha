@@ -29,6 +29,8 @@ unshift @INC, $path; require 'tgr.pm'; require 'Cab.pm';
 sub main {
     my $tgrref = &open_tgr_dir($options{t});
     my $txtref = &open_cab_dir($options{c});
+    &make_mod($tgrref, $txtref);
+    &output_mod($txtref);
 }
 
 sub make_mod {
