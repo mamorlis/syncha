@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/perl -w
 # ===================================================================
 my $NAME         = 'Cab.pm';
 my $AUTHOR       = 'Ryu IIDA';
@@ -8,18 +8,22 @@ my $PURPOSE      = 'CaboChaで構文解析した結果からオブジェクトを作成';
 # ===================================================================
 
 use strict;
-use GDBM_File;
+BEGIN {
+    unless (eval 'use BerkeleyDB; 1') {
+        use DB_File;
+    }
+}
 
-# my $ZERO_PATH = '/home/ryu-i/work/jcoref/script/ver0/Cab.pm';
-# $ZERO_PATH =~ s|[^/]+$||; my $ZERO_DAT_PATH = $ZERO_PATH; 
-# $ZERO_DAT_PATH =~ s|[^/]+/+[^/]+/+$|dat/|; unshift @INC, $ZERO_PATH;
+use ENA::Conf;
+use ENA::EDR;
+use ENA::Pronoun;
+use ENA::Rengo;
 
-require 'check_edr.pl';
-require 'check_pronoun_type.pl';
+my $ena_edr     = new ENA::EDR;
+my $ena_pronoun = new ENA::Pronoun;
+my $ena_rengo   = new ENA::Rengo;
+
 require 'add_func_exp.pl';
-
-my $rengo = $ENV{ENA_GDBM_DIR}.'/rengo.gdbm';
-tie my %rengo, 'GDBM_File', $rengo, GDBM_READER, 0644 or die $!;
 
 sub open_cab_file {
     my $file = shift;
@@ -2020,10 +2024,10 @@ sub new {
 	$cab[$i]->ZERO(&check_zero($cab[$i]));
 	$cab[$i]->DEFINITE(&ext_definite($cab[$i]));
 	$cab[$i]->PRE_DEFINITE(&ext_pre_definite($cab[$i], @cab));	
-	$cab[$i]->EDR_PERSON(&EDR::check_edr_person($cab[$i]));
-	$cab[$i]->EDR_ORG(&EDR::check_edr_org($cab[$i]));
+	$cab[$i]->EDR_PERSON($ena_edr->check_edr_person($cab[$i]));
+	$cab[$i]->EDR_ORG($ena_edr->check_edr_org($cab[$i]));
 	$cab[$i]->ANIMACY(&check_animacy($cab[$i]));
-	$cab[$i]->PRONOUN_TYPE(&PRONOUN::check_pronoun_type($cab[$i]));
+	$cab[$i]->PRONOUN_TYPE($ena_pronoun->check_pronoun_type($cab[$i]));
 	$cab[$i]->descendant(&ext_descendant($i, @cab));
 	$cab[$i]->DOU(&check_dou($cab[$i]));
 #  	$cab[$i]->is_exophora(0);
@@ -2297,7 +2301,7 @@ sub ext_case {
 # 	if ($m->POS =~ /^助詞-格助詞-一般/) {
 # 	    $case .= $m->WF unless ($m->WF =~ /^(か|だけ|こそ|など|のみ)$/);
 # 	} elsif ($m->POS =~ /^助詞-格助詞-連語/) {
-# 	    $case .= $rengo{$m->WF};
+# 	    $case .= $ena_rengo->get_rengo($m->WF);
 # 	} elsif ($m->POS =~ /^助詞(?!-接続助詞)/) {
 # 	    unless ($m->WF =~ /^(か|だけ|こそ|など|のみ)$/) {
 # 		$case .= $m->WF;
@@ -2322,7 +2326,7 @@ sub ext_case_h {
 	$temp .= $m->WF;
 	if ($m->POS =~ /^助詞-格助詞-連語/) {
 	    if ($m->WF eq 'にとって'){
-		$case .= $rengo{$m->WF};
+		$case .= $ena_rengo->get_rengo($m->WF);
 	    }else{
 		$case .= $m->WF;
 	    }
