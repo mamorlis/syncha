@@ -1,5 +1,66 @@
 #!/usr/bin/env perl
 
+=head1 NAME
+
+ena-mkdata - Convert Tagrin file into Mod file
+
+$Id$
+
+Copyright (C) 2005-2007 Mamoru KOMACHI <mamoru-k@is.naist.jp>
+
+=head1 SYNOPSYS
+
+ena-mkdata [-h] -i tgr.d [-r chasenrc] [-o mod.d] [-c cab.d] [-t txt.d]
+
+=head1 DESCRIPTION
+
+Ena-mkdata converts Tagrin files into Mod files. It takes a name of the
+directory which contains all the .tgr files. Note that Tagrin files must
+be written in EUC-JP with LF newline.
+
+=head1 OPTIONS
+
+=head2 -h
+
+Prints usage.
+
+=head2 -i
+
+Specifies in which directory tgr files reside. You must specify valid
+directory which contains at least one tgr file.
+
+=head2 -r
+
+Specifies which chasenrc to use. (default: /etc/chasenrc)
+
+=head2 -o
+
+Specifies a name of the directory to write mod files. (default: mod)
+
+=head2 -c
+
+Specifies a name of the directory to write cabocha files. (default: cab)
+
+=head2 -t
+
+Specifies a name of the directory to write text files. (default: txt)
+
+=head1 REPORTING BUGS
+
+Please report any bugs you encounter through our website:
+
+B<http://syncha.sourceforge.jp/>
+
+=head1 AUTHORS
+
+Mamoru KOMACHI <mamoru-k@is.naist.jp>
+
+=head1 SEE ALSO
+
+ena-mkmodel(1), ena-learn(1), ena-tagger(1)
+
+=cut
+
 use strict;
 use warnings;
 
@@ -37,48 +98,3 @@ mkdir $mod_dir unless -d $mod_dir;
 system("$scripts/ext_mod.pl -c $cab_dir -t $tgr_dir -o $mod_dir") == 0
     or die "Failed to exec ext_mod.pl:$!\n";
 
-__END__
-
-=head1 NAME
-
-ena-mkdata - Convert Tagrin file into Mod file
-
-$Id$
-
-=head1 SYNOPSYS
-
-ena-mkdata [-h] -i tgr.d [-r chasenrc] [-o mod.d] [-c cab.d] [-t txt.d]
-
-=head1 DESCRIPTION
-
-Ena-mkdata converts Tagrin files into Mod files. It takes a name of the
-directory which contains all the .tgr files. Note that Tagrin files must
-be written in EUC-JP with LF newline.
-
-=head1 OPTIONS
-
-=over 4
-
-=item -h
-
-prints usage.
-
-=item -r
-
-specifies which chasenrc to use. (default: /etc/chasenrc)
-
-=item -o
-
-specifies a name of the directory to write mod files. (default: mod)
-
-=item -c
-
-specifies a name of the directory to write cabocha files. (default: cab)
-
-=item -t
-
-specifies a name of the directory to write text files. (default: txt)
-
-=head1 SEE ALSO
-
-ena-mkmodel, ena-learn, ena-tagger

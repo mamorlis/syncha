@@ -6,7 +6,7 @@ ENA -- Event Noun Annotator
 
 $Id$
 
-Copyright (C) 2005-2006 Mamoru KOMACHI <mamoru-k@is.naist.jp>
+Copyright (C) 2005-2007 Mamoru KOMACHI <mamoru-k@is.naist.jp>
 
 =head1 SYNOPSIS
 
@@ -14,11 +14,25 @@ ena-tagger file.cab [file.svmmodel]
 
 =head1 DESCRIPTION
 
-Ena-tagger annotates even nouns to CaboCha format text data. Annotation
-model is learned from ena-learn, and can be specified by the second argument
-depending on the model you would like to use. (e.g. You may want to use
-models from newswire for formal documents whereas you could also use specific
-models for certain domain.
+Ena-tagger annotates even noun information to CaboCha format text data.
+Annotation model is trained by ena-learn, and can be specified by the second
+argument depending on the model you would like to use. (e.g. You may want to
+use models from newswire for formal documents whereas you could also use
+specific models for certain domain.)
+
+=head1 REPORTING BUGS
+
+Please report any bugs you encounter through our website:
+
+B<http://syncha.sourceforge.jp/>
+
+=head1 AUTHOR
+
+Mamoru KOMACHI <mamoru-k@is.naist.jp>
+
+=head1 SEE ALSO
+
+ena-learn(1), ena-mkdata(1), ena-mkmodel(1)
 
 =cut
 

@@ -1,5 +1,54 @@
 #!/usr/bin/env perl
 
+=head1 NAME
+
+ENA -- Event Noun Annotator
+
+$Id$
+
+Copyright (C) 2005-2007 Mamoru KOMACHI <mamoru-k@is.naist.jp>
+
+=head1 SYNOPSIS
+
+ena-mkmodel [-h] [-1] [-m mod_dir]
+
+=head1 DESCRIPTION
+
+Ena-mkmodel reads event annotated mod file(s) and writes features
+learned from the file(s) to stdout. If you just need only one document
+use -1 flag. The output features are compatible with TinySVM/SVMLight,
+and so you can safely pass them to svm_learn.
+
+=head1 OPTIONS
+
+=head2 -h
+
+prints usage.
+
+=head2 -1
+
+Uses only first mod file found in mod directory.
+
+=head2 -m
+
+Specifies a name of the directory containing mod files. (default: ../dat/mod)
+
+=head1 REPORTING BUGS
+
+Please report any bugs you encounter through our website:
+
+B<http://syncha.sourcefprge.jp/>
+
+=head1 AUTHOR
+
+Mamoru KOMACHI <mamoru-k@is.naist.jp>
+
+=head1 SEE ALSO
+
+ena-learn(1), ena-mkdata(1), ena-tagger(1)
+
+=cut
+
 use strict;
 use warnings;
 
@@ -36,39 +85,3 @@ for my $text (@texts) {
 }
 
 1;
-__END__
-
-=head1 NAME
-
-ENA -- Event Noun Annotator
-
-$Id$
-
-Copyright (C) 2005-2006 Mamoru KOMACHI <mamoru-k@is.naist.jp>
-
-=head1 SYNOPSIS
-
-ena-mkmodel [-h] [-1] [-m mod_dir]
-
-=head1 DESCRIPTION
-
-Ena-mkmodel reads event annotated mod file(s) and writes features
-learned from the file(s) to stdout. If you just need only one document
-use -1 flag. The output features are compatible with TinySVM (thus SVMLight),
-and so you can safely pass them to svm_learn.
-
-=head1 OPTIONS
-
-=over 4
-
-=item -h
-
-prints usage.
-
-=item -1
-
-uses only first mod file found in mod directory.
-
-=item -m
-
-specifies a name of the directory containing mod files. (default: ../dat/mod)

@@ -6,7 +6,7 @@ ENA -- Event Noun Annotator
 
 $Id$
 
-Copyright (C) 2005-2006 Mamoru KOMACHI <mamoru-k@is.naist.jp>
+Copyright (C) 2005-2007 Mamoru KOMACHI <mamoru-k@is.naist.jp>
 
 =head1 SYNOPSIS
 
@@ -16,9 +16,33 @@ ena-learn [-t toolkit] [-m file.svmmodel] file.svmdata
 
 Ena-learn reads SVM features and constructs SVM models for event noun
 annotation. You can obtain features from ena-mkmodel, and feed them
-to this program. You can specify the model file name by -m flag, or
-it is calculated from given data file name. If you prefer SVM-light,
-you can specify -t svm_light for svm_learn and svm_classify.
+to this program.
+
+=head1 OPTIONS
+
+=head2 -m
+
+Specifies the model file name. Defaults to calculate from the filename
+of svmdata (first argument).
+
+=head2 -t
+
+Specifies an Support Vector Machines implementation to use. It takes either
+svm_light or tinysvm.  Defaults to svm_light.
+
+=head1 REPORTING BUGS
+
+Please report any bugs you encounter through our website:
+
+B<http://syncha.sourcefprge.jp/>
+
+=head1 AUTHOR
+
+Mamoru KOMACHI <mamoru-k@is.naist.jp>
+
+=head1 SEE ALSO
+
+ena-mkdata(1), ena-mkmodel(1), ena-tagger(1)
 
 =cut
 
