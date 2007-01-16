@@ -1,6 +1,61 @@
 #!/usr/bin/env perl
 #òµÌ¥ò³ò´
 
+=head1 NAME
+
+Syncha -- SYNtactic CHunck Annotator
+
+=head1 SYNOPSIS
+
+syncha [-a intraparam] [-e interparam] [-r chasenrc] [input-file(s)]
+
+=head1 DESCRIPTION
+
+Syncha is a Japanese syntactic chunck annotator. It detects predicate-
+argument stricture of verb, adjective, and verbal noun. The task
+includes:
+
+=over 4
+
+=item * recognize event nouns
+
+=item * fill zero anaphora
+
+=item * identify predicate-argument structure
+
+=back
+
+=head1 OPTIONS
+
+=head2 -a
+
+Specifies a threshold to find intra-sentential arguments. Defaults to 0.
+
+=head2 -e
+
+Specifies a threshold to find inter-sentential arguments.  Defaults to 0.
+
+=head2 -r
+
+Specifies flags to be passed to chasen. Defaults to '-j'.
+
+=head1 BUGS
+
+Please report any bugs you encounter through our website:
+
+B<http://syncha.sourceforge.jp/>
+
+=head1 AUTHORS
+
+    Ryu Iida <ryu-i@is.naist.jp>
+    Mamoru Komachi <mamoru-k@is.naist.jp>
+
+=head1 SEE ALSO
+
+chasen(1), mecab(1), cabocha(1)
+
+=cut
+
 use strict;
 use warnings;
 
@@ -30,48 +85,6 @@ my $cabocha      = 'cabocha';
 my $fix_id       = 'ena/lib/fix_id.pl';
 my $intra_param  = $options{a} || 0;
 my $inter_param  = $options{e} || 0;
-
-=pod
-
-=head1 NAME
-
-Syncha -- SYNtactic CHunck Annotator
-
-=head1 SYNOPSIS
-
-syncha [-aeo] [input-file]
-
-=head1 DESCRIPTION
-
-Syncha is a Japanese syntactic chunck annotator. It detects predicate-
-argument stricture of verb, adjective, and verbial noun. The task
-includes:
-
-=item * recognize event noun
-
-=item * fill zero anaphora
-
-=item * identify predicate-argument structure
-
-=item * annotate opinion marker (optional)
-
-=head1 OPTIONS
-
-=item -a
-
--a option specifies a threshold (0 - 1) to find intra-sentential arguments.
-Defaults to 0.
-
-=item -e
-
--e option specifies a threshold (0 - 1) to find inter-sentential arguments.
-Defaults to 0.
-
-=item -r
-
--r option is passed to chasen. Defaults to '-j'.
-
-=cut
 
 local $/ = undef;
 while (<>) {
