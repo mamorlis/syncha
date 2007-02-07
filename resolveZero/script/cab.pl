@@ -2628,15 +2628,14 @@ sub check_pred {
 	return if ($head == $m_num-1);
 	my $n = $mor[$head+1];
 	return $m->BF. 'だ' if ($n->BF eq 'だ');
-	return;
-    } elsif ($m->POS eq '名詞-サ変接続' or $m->POS eq '名詞-接尾-サ変接続') {
-	return $m->BF.'する' if ($dep eq '-1');
-	return '' if ($head == $m_num-1);
-	my $n = $mor[$head+1];
-#  	return '' unless ($n->POS =~ /^(?:記号-括弧閉|助詞-格助詞-引用|
-#  				     記号-読点|記号-句点)/x);    
-	if ($n->POS =~ /^記号-読点/) {
-	    return $m->BF.'する' if (&check_pred_sahen($b, @B));
+# 	return;
+	if ($m->POS eq '名詞-サ変接続' or $m->POS eq '名詞-接尾-サ変接続') {
+	    return $m->BF.'する' if ($dep eq '-1');
+	    return '' if ($head == $m_num-1);
+	    my $n = $mor[$head+1];
+	    if ($n->POS =~ /^記号-読点/) {
+		return $m->BF.'する' if (&check_pred_sahen($b, @B));
+	    }
 	}
     }
     return '';
