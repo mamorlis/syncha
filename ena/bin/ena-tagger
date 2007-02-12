@@ -43,7 +43,8 @@ use Carp qw(croak carp);
 use Data::Dumper;
 
 use Getopt::Std;
-use vars qw($opt_t);
+use vars qw($opt_t $opt_h);
+getopts 't:h';
 
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
@@ -58,6 +59,7 @@ USAGE: $0 [-t toolkit] file.cab
 __USAGE__
 
 die $usage if @ARGV < 1;
+die $usage if $opt_h;
 
 # main
 my $cab_file   = shift;

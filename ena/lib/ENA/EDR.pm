@@ -28,6 +28,18 @@ my $hum = "$ENV{ENA_DB_DIR}/edr_person.db";
 my $org = "$ENV{ENA_DB_DIR}/edr_org.db";
 my (%hum, %org);
 
+#my $jcc_file = "/cl/nldata/EDR/EDR1.5/JCD/JCC.DIC"; # 鼎弹辑今
+my $jcp_file = "/cl/nldata/EDR/EDR1.5/JCD/JCP.DIC"; # 鼎弹パタ〖ン辑今
+my $cpc_file = "/cl/nldata/EDR/EDR1.5/CD/CPC.DIC";  # 车前挛废辑今
+my $cph_file = "/cl/nldata/EDR/EDR1.5/CD/CPH.DIC";  # 车前辑今
+#Readonly::Scalar my $jcc_db => 'bdb/jcc.db';
+#tie %jcc_dic, 'DB_File', $jcc_db or die "Cannot open $jcc_db";
+my $jcp_db = "$ENV{ENA_DB_DIR}/jcp.db";
+my $cpc_db = "$ENV{ENA_DB_DIR}/cpc.db";
+my $cph_db = "$ENV{ENA_DB_DIR}/cph.db";
+my (%jcp_dic, %cpc_dic, %cph_dic);
+use vars qw($DEBUG);
+
 sub new {
     my $class = shift;
     my $self  = {};
@@ -46,43 +58,6 @@ sub new {
             -Flags    => DB_RDONLY,
             -Mode     => 0444
             or die "Cannot open $org:$!";
-    } elsif (eval "require DB_File; 1") {
-        tie %hum, 'DB_File', $hum, O_RDONLY, 0444, $DB_HASH
-            or die "Cannot open $hum:$!";
-        tie %org, 'DB_File', $org, O_RDONLY, 0444, $DB_HASH
-            or die "Cannot open $org:$!";
-    }
-
-    return $self;
-}
-
-# [in ] NOUN
-# [out] 1:person ; 0:otherwise
-sub check_edr_person {
-    my ($self, $bunsetsu) = @_;
-    my $noun = $bunsetsu->HEAD_NOUN;
-    return ($hum{$noun})? 'EDR_PERSON' : '';
-}
-
-sub check_edr_org {
-    my ($self, $bunsetsu) = @_;
-    my $noun = $bunsetsu->HEAD_NOUN;
-    return ($org{$noun})? 'EDR_ORG' : '';
-}
-
-#my $jcc_file = "/cl/nldata/EDR/EDR1.5/JCD/JCC.DIC"; # 鼎弹辑今
-my $jcp_file = "/cl/nldata/EDR/EDR1.5/JCD/JCP.DIC"; # 鼎弹パタ〖ン辑今
-my $cpc_file = "/cl/nldata/EDR/EDR1.5/CD/CPC.DIC";  # 车前挛废辑今
-my $cph_file = "/cl/nldata/EDR/EDR1.5/CD/CPH.DIC";  # 车前辑今
-#Readonly::Scalar my $jcc_db => 'bdb/jcc.db';
-#tie %jcc_dic, 'DB_File', $jcc_db or die "Cannot open $jcc_db";
-my $jcp_db = "$ENV{ENA_DB_DIR}/jcp.db";
-my $cpc_db = "$ENV{ENA_DB_DIR}/cpc.db";
-my $cph_db = "$ENV{ENA_DB_DIR}/cph.db";
-my (%jcp_dic, %cpc_dic, %cph_dic);
-{
-    no strict "subs";
-    if (eval "require BerkeleyDB; 1") {
         tie %jcp_dic, 'BerkeleyDB::Hash',
             -Filename => $jcp_db,
             -Flags    => DB_RDONLY,
@@ -99,6 +74,10 @@ my (%jcp_dic, %cpc_dic, %cph_dic);
             -Mode     => 0444
             or croak "Cannot open $cph_db:$!";
     } elsif (eval "require DB_File; 1") {
+        tie %hum, 'DB_File', $hum, O_RDONLY, 0444, $DB_HASH
+            or die "Cannot open $hum:$!";
+        tie %org, 'DB_File', $org, O_RDONLY, 0444, $DB_HASH
+            or die "Cannot open $org:$!";
         tie %jcp_dic, 'DB_File', $jcp_db, O_RDONLY, 0644
             or croak "Cannot open $jcp_db";
         tie %cpc_dic, 'DB_File', $cpc_db, O_RDONLY, 0644
@@ -106,9 +85,9 @@ my (%jcp_dic, %cpc_dic, %cph_dic);
         tie %cph_dic, 'DB_File', $cph_db, O_RDONLY, 0644
             or croak "Cannot open $cph_db";
     }
-}
 
-use vars qw($DEBUG);
+    return $self;
+}
 
 # $concept_system->[レベル1灌誊の戎规][レベル2灌誊の戎规]
 my @concept_system = [
@@ -159,6 +138,20 @@ my @concept_system = [
         '30f7d6',
     ],
 ];
+
+# [in ] NOUN
+# [out] 1:person ; 0:otherwise
+sub check_edr_person {
+    my ($self, $bunsetsu) = @_;
+    my $noun = $bunsetsu->HEAD_NOUN;
+    return ($hum{$noun})? 'EDR_PERSON' : '';
+}
+
+sub check_edr_org {
+    my ($self, $bunsetsu) = @_;
+    my $noun = $bunsetsu->HEAD_NOUN;
+    return ($org{$noun})? 'EDR_ORG' : '';
+}
 
 sub get_concept_id {
     my $concept = shift;

@@ -58,6 +58,7 @@ use Data::Dumper;
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
 use ENA;
+use MyCabocha;
 
 # main
 use Getopt::Std;
@@ -71,16 +72,22 @@ USAGE
 die $usage if defined $options{h};
 
 $ENV{ENA_MOD_DIR} = $options{m} if $options{m};
-my $mod = $options{'1'} ? Mod->new_one : Mod->new;
-my @texts = @{$mod->txt};
-my $morph_id = 1;
-for my $text (@texts) {
-    my @sentences = @{$text->Sentence};
+my $mod_dir = $ENV{ENA_MOD_DIR};
+opendir my $mod_dh, $mod_dir or die "Cannot open $mod_dir:$!\n";
+my @mod_files = grep { /\.mod$/ } readdir $mod_dh;
+close $mod_dh;
+
+for my $mod_file (@mod_files) {
+    open my $mod, '<', $mod_dir.'/'.$mod_file
+        or die "Cannot open a $mod_file:$!\n";
+    my $cab = new MyCabocha ($mod);
+    close $mod;
+
     my @noun_list;
 
     # 1文ごとにトレーニング(名詞リストは文処理ごとに増える)
-    for my $sentence (@sentences) {
-        ENA::makeTrainData($sentence, \@noun_list);
+    for my $sentence (@{ $cab->get_text }) {
+        ENA::make_train_data($sentence, \@noun_list);
     }
 }
 

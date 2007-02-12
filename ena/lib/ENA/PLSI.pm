@@ -135,7 +135,10 @@ my $Vdic      = "$ENV{ENA_DB_DIR}/v2id.db";
 my $ncv2score = "$ENV{ENA_DB_DIR}/ncv2score.db";
 
 my (%Ndic, %Vdic, %ncv2score);
-{
+sub new {
+    my $class = shift;
+    my $self  = {};
+    bless $self, ref($class) || $class;
     no strict "subs";
     if (eval "require BerkeleyDB; 1") {
         tie %Ndic, 'BerkeleyDB::Hash',
@@ -161,6 +164,7 @@ my (%Ndic, %Vdic, %ncv2score);
         tie my %ncv2score, 'DB_File', $ncv2score, O_RDONLY, 0644
             or croak "Cannot open $ncv2score:$!";
     }
+    return $self;
 }
 
 sub get_noun_word_form {

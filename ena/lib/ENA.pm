@@ -25,6 +25,10 @@ use ENA::PLSI;
 use ENA::EDR;
 use ENA::Bgh;
 
+my $plsi = new ENA::PLSI;
+my $edr  = new ENA::EDR;
+my $bgh  = new ENA::Bgh;
+
 use strict;
 use Carp qw(croak carp);
 use Data::Dumper;
@@ -212,37 +216,37 @@ sub get_current_feature {
 }
 
 # 文を素性リストに直す手続き
-sub makeTrainData {
-    # Sentence が入ってくる
-    my $s = shift;
+sub make_train_data {
+    # Text が入ってくる
+    my $text = shift;
     my $noun_list_ref = shift;
     my %opt = ( OUTPUT => 1, @_, );
 
-    my $sentence = $s->STRING;
+    my $sentence = $text->get_surface;
 
-    my @bunsetsu = @{ $s->Bunsetsu };
+    my @chunks = @{ $text->get_chunk };
 
-    for (my $i = 0; $i < @bunsetsu; $i++) {
-        my $segment = $bunsetsu[$i];
-        my @morphs  = @{ $segment->Mor };
-        my ($prev_segment, @prev_morphs);
+    for (my $i = 0; $i < @chunks; $i++) {
+        my $chunk = $chunks[$i];
+        my @morphs  = @{ $chunk->get_morph };
+        my ($prev_chunk, @prev_morphs);
         if ($i > 0) {
-            $prev_segment = $bunsetsu[$i-1];
-            @prev_morphs  = @{ $prev_segment->Mor };
+            $prev_chunk  = $chunks[$i-1];
+            @prev_morphs = @{ $prev_chunk->get_morph };
         }
-        my ($next_segment, @next_morphs);
-        if ($i < @bunsetsu - 1) {
-            $next_segment = $bunsetsu[$i+1];
-            @next_morphs  = @{ $next_segment->Mor };
+        my ($next_chunk, @next_morphs);
+        if ($i < @chunks - 1) {
+            $next_chunk  = $chunks[$i+1];
+            @next_morphs = @{ $next_chunk->get_morph };
         }
-        my $word_form      = $segment->WF;
-        my $head_word_form = $segment->HEAD_WF;
-        my $head_pos       = $segment->HEAD_POS;
+        my $word_form      = $chunk->get_surface;
+        my $head_word_form = $chunk->get_head->get_surface;
+        my $head_pos       = $chunk->get_head->get_pos;
 
         # 文節に関する素性(BACT で使用)
         my $syn_morphs_pos = '';
         for my $morph (@morphs) {
-            $syn_morphs_pos .= "($morph->{POS})";
+            $syn_morphs_pos .= "($morph->get_pos)";
         }
         
         # FIXME: ad hoc feature
@@ -252,17 +256,17 @@ sub makeTrainData {
             # 最後の形態素
             my $bridge = $prev_morphs[-1];
             my $bridge_cand = $prev_morphs[-2];
-            if ($bridge->WF eq 'の') {
-                $sem_bridge = $bridge_cand->WF;
+            if ($bridge->get_surface eq 'の') {
+                $sem_bridge = $bridge_cand->get_surface;
             }
             for my $morph (@prev_morphs) {
-                $syn_prev_morphs_pos .= "($morph->{POS})";
+                $syn_prev_morphs_pos .= "($morph->get_pos)";
             }
         }
         my $syn_next_morphs_pos;
-        if ($i < @bunsetsu - 1) {
+        if ($i < @chunks - 1) {
             $syn_next_morphs_pos = join q{},
-                                   map { "($_->{POS})" } @next_morphs;
+                                   map { "($_->get_pos)" } @next_morphs;
         }
 
         #if ($segment->PRED) {
@@ -273,20 +277,20 @@ sub makeTrainData {
         for (my $mid = 0; $mid < @morphs; $mid++) {
             my $morph = $morphs[$mid];
             my %feature;
-            if ($morph->POS =~ /^名詞-サ変/) {
+            if ($morph->get_pos =~ /^名詞-サ変/) {
                 # サ変名詞が見つかった
-                carp "SAHEN: $morph->{WF}\n" if $DEBUG;
+                carp "SAHEN: $morph->_get_surface\n" if $DEBUG;
 
                 # 分類語彙表と EDR を見る
-                my $bgh_id  = ENA::Bgh::get_class_id_frac($morph->WF);
-                my %edr_pat = ENA::EDR::get_pattern($morph->WF);
+                my $bgh_id  = $bgh->get_class_id_frac($morph->get_surface);
+                my %edr_pat = $edr->get_pattern($morph->get_surface);
 
-                carp "BGH: $bgh_id, WF: $morph->{WF}" if $DEBUG;
+                carp "BGH: $bgh_id, WF: $morph->get_surface" if $DEBUG;
 
                 # 形態素の素性
                 $feature{head_word_form}    = $head_word_form;
                 $feature{segment_word_form} = $word_form;
-                $feature{morph_word_form}   = $morph->WF;
+                $feature{morph_word_form}   = $morph->get_surface;
                 $feature{bgh_id}    = $bgh_id;
                 $feature{edr_pat}   = \%edr_pat;
                 
@@ -310,13 +314,13 @@ sub makeTrainData {
 
                 # 前後にサ変があるか
                 for my $before_morph (@before_morphs) {
-                    if ($before_morph->POS =~ /名詞-サ変/) {
+                    if ($before_morph->get_pos =~ /名詞-サ変/) {
                         $has_sahen_before++;
                         $feature{syn_sahen_before} = 1;
                     }
                 }
                 for my $after_morph (@after_morphs) {
-                    if ($after_morph->POS =~ /名詞-サ変/) {
+                    if ($after_morph->get_pos =~ /名詞-サ変/) {
                         $has_sahen_after++;
                         $feature{syn_sahen_after} = 1;
                     }
@@ -326,11 +330,11 @@ sub makeTrainData {
                 # サ変のあとに助詞が来る
                 if ($has_sahen_after) {
                     for (my $mid = 0; $mid < @after_morphs - 1; $mid++) {
-                        if ($after_morphs[$mid]->POS =~ m/^名詞-サ変/xms) {
-                            if ($after_morphs[$mid+1]->POS =~ m/^助詞/xms) {
+                        if ($after_morphs[$mid]->get_pos =~ m/^名詞-サ変/xms) {
+                            if ($after_morphs[$mid+1]->get_pos =~ m/^助詞/xms) {
                                 $feature{syn_sahen_particle_after} = 1;
                             }
-                            elsif ($after_morphs[$mid+1]->POS =~ m/^名詞-一般/xms) {
+                            elsif ($after_morphs[$mid+1]->get_pos =~ m/^名詞-一般/xms) {
                                 $feature{syn_sahen_general_after} = 1;
                             }
                         }
@@ -340,7 +344,7 @@ sub makeTrainData {
                 # 前文節に関する素性
                 if ($has_sahen_before) {
                     for my $before_morph (@before_morphs) {
-                        if ($before_morph->POS =~ m/^名詞-一般/xms) {
+                        if ($before_morph->get_pos =~ m/^名詞-一般/xms) {
                             $feature{syn_sahen_general_before} = 1;
                         }
                     }
@@ -348,14 +352,14 @@ sub makeTrainData {
 
                 # サ変+名詞接尾となっている
                 if ($morphs[$mid+1] and
-                    $morphs[$mid+1]->POS =~ m/^名詞-接尾/xms) {
+                    $morphs[$mid+1]->get_pos =~ m/^名詞-接尾/xms) {
                     $feature{syn_suffix} = 1;
                 }
 
                 # サ変が複数入っている
                 my $number_of_sahen = 0;
                 for my $morph (@morphs) {
-                    if ($morph->POS =~ m/^名詞-サ変/xms) {
+                    if ($morph->get_pos =~ m/^名詞-サ変/xms) {
                         $number_of_sahen++;
                     }
                 }
@@ -365,11 +369,10 @@ sub makeTrainData {
 
                 # 項が当たっているかどうか
                 foreach my $case (qw{GA WO NI}) {
-                    if ($morph->$case) {
-                        my $morph_case_id = $morph->$case;
+                    if (my $morph_case_id = $morph->get_case($case)) {
                         foreach (@morphs) {
-                            if ($_->ID and ($_->ID eq $morph_case_id)) {
-                                $feature{"case_$case"} = $_->WF;
+                            if ($_->get_id and ($_->get_id eq $morph_case_id)) {
+                                $feature{"case_$case"} = $_->get_surface;
                             }
                         }
                     }
@@ -379,22 +382,22 @@ sub makeTrainData {
                 $feature{sentence}  = $sentence;
 
                 # 事態タグが付いているかどうか
-                if ($morph->EVENT) {
+                if ($morph->get_type eq 'EVENT') {
                     $feature{event} = 1; 
-                    if ($morph->GA) {
+                    if ($morph->get_case('GA')) {
                         $feature{event} += 2;
                     }
-                    if ($morph->WO) {
+                    if ($morph->get_case('WO')) {
                         $feature{event} += 4;
                     }
-                    if ($morph->NI) {
+                    if ($morph->get_case('NI')) {
                         $feature{event} += 8;
                     }
                 }
 
                 # 名詞としての処理
                 foreach my $morph (@morphs) {
-                    if ($morph->POS =~ /^名詞/) {
+                    if ($morph->get_pos =~ /^名詞/) {
                         push @{ $noun_list_ref }, $morph;
                         $feature{noun_id} = scalar @{ $noun_list_ref };
                     }
@@ -403,7 +406,7 @@ sub makeTrainData {
             else { # not サ変
                 # 名詞が見つかった
                 foreach my $morph (@morphs) {
-                    if ($morph->POS =~ /^名詞/) {
+                    if ($morph->get_pos =~ /^名詞/) {
                         push @{ $noun_list_ref }, $morph;
                     }
                 }
@@ -442,7 +445,7 @@ sub add_noun_feature {
     my @noun_list = @{ $noun_ref };
     for (my $i = 0; $i < scalar @noun_list; $i++) {
         my $noun = $noun_list[$i];
-        my $concept_id = ENA::EDR::get_concept_id($noun->WF);
+        my $concept_id = $edr->get_concept_id($noun->get_surface);
         $concept_id_of{$noun}               = $concept_id;
         $concept_morph_of{"$concept_id"}    = $noun;
 
@@ -465,7 +468,7 @@ sub add_noun_feature {
                 # 出現する名詞について意味的制約を満たしているものがある
                 # FIXME: 計算をキャッシュして高速化
                 foreach my $noun_id (values %concept_id_of) {
-                    my $similarity = ENA::EDR::is_under_class($noun_id, $concept_id);
+                    my $similarity = $edr->is_under_class($noun_id, $concept_id);
                     my $verb = $feature_ref->{head_word_form};
 
                     my $sem_feature      = "edr_sem_$sem_role";
@@ -476,7 +479,7 @@ sub add_noun_feature {
                     # 遠くなれば低く出るようになっていてほしい
                     my $distance = abs($feature_ref->{noun_id}
                                        - $concept_position_of{"$noun_id"});
-                    my $cooc = ENA::PLSI::calc_mi($concept, $verb."する");
+                    my $cooc = $plsi->calc_mi($concept, $verb."する");
 
                     print STDERR
                          "DISTANCE:",
