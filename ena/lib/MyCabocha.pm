@@ -278,6 +278,8 @@ sub new {
 sub puts {
     my $self = shift;
 
+    # FIXME: not defined
+    return if !$self->get_chunk;
     for my $chunk (@{ $self->get_chunk }) {
         $chunk->puts;
     }
