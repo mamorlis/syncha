@@ -99,6 +99,8 @@ sub parse_arg {
     my %arg_of;
 
     for my $text (@{ $self->get_text }) {
+        # FIXME: not defined
+        last if !$text->get_chunk;
         for my $chunk (@{ $text->get_chunk }) {
             for my $morph (@{ $chunk->get_morph }) {
                 if (my $id = ($morph->get_argstr =~ m/ID=(\d*)/gmx)[0]) {
@@ -290,6 +292,8 @@ sub puts {
 sub get_surface {
     my $self = shift;
 
+    # FIXME: not defined
+    return if !$self->get_chunk;
     return map { $_->get_surface } @{ $self->get_chunk };
 }
 

@@ -48,6 +48,7 @@ getopts 't:h';
 
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
+use MyCabocha;
 use ENA;
 use ENA::Event;
 
@@ -64,30 +65,12 @@ die $usage if $opt_h;
 # main
 my $cab_file   = shift;
 my $toolkit    = $opt_t || 'svm_light';
-my $mod = Mod->new_file("$cab_file");
-my $ena_event = new ENA::Event ($toolkit, $mod);
-my $morph_id = 0;
-for my $text (@{ $mod->txt }) {
-    for my $sentence (@{ $text->Sentence }) {
-        for my $segment (@{ $sentence->Bunsetsu }) {
-            # XXX* output opinion separately
-            print $segment->puts_bunsetsu_label;
-            for my $morph (@{ $segment->Mor }) {
-                # do not put newline
-                print $morph->puts( NL => '' );
-
-                # とりあえずサ変のみ
-                # (本当は「動き」のようなものも入れたい)
-                if ($morph->POS =~ m/^名詞-サ変/) {
-                    print "\tEVENT" if $ena_event->is_event($morph_id);
-                }
-                print "\n";
-
-                $morph_id++;
-            }
-        }
-        print "EOS\n";
-    }
+open my $cab_fh, '<', $cab_file or die "Cannot open $cab_file:$!\n";
+my $cab       = new MyCabocha ($cab_fh);
+close $cab_fh;
+my $ena_event = new ENA::Event ($toolkit, $cab);
+for my $sentence (@{ $cab->get_text }) {
+    $sentence->puts;
 }
 
 1;

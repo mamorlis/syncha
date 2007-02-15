@@ -31,7 +31,7 @@ my %model_of = ( tinysvm   => "$Bin/../dat/mod/train.svmmodel",
 sub new {
     my $class      = shift;
     my $toolkit    = shift;
-    my $mod        = shift;
+    my $cab        = shift;
     my $self       = {};
     bless $self, $class;
 
@@ -46,18 +46,16 @@ sub new {
     # (1)
     my $morph_id = 0;
     my @morph_ids;
-    for my $text (@{ $mod->txt }) {
-        my @noun_list;
-        for my $sentence (@{ $text->Sentence }) {
-            ENA::makeTrainData($sentence, \@noun_list, OUTPUT => 0);
-            for my $segment (@{ $sentence->Bunsetsu }) {
-                for my $morph (@{ $segment->Mor }) {
-                    if ($morph->POS =~ m/^名詞-サ変/) {
-                        print $test_file ENA::get_feature($morph_id), "\n";
-                        push @morph_ids, $morph_id;
-                    }
-                    $morph_id++;
+    my @noun_list;
+    for my $sentence (@{ $cab->get_text }) {
+        ENA::make_train_data($sentence, \@noun_list, OUTPUT => 0);
+        for my $chunk (@{ $sentence->get_chunk }) {
+            for my $morph (@{ $chunk->get_morph }) {
+                if ($morph->get_pos =~ m/^名詞-サ変/) {
+                    print $test_file ENA::get_feature($morph_id), "\n";
+                    push @morph_ids, $morph_id;
                 }
+                $morph_id++;
             }
         }
     }
@@ -90,6 +88,19 @@ sub new {
     # (3)
     for (my $i = 0; $i < @morph_ids; ++$i) {
         $score_of{$morph_ids[$i]} = $scores[$i];
+    }
+    $morph_id = 0;
+    for my $sentence (@{ $cab->get_text }) {
+        # FIXME: not defined
+        next if !$sentence->get_chunk;
+        for my $chunk (@{ $sentence->get_chunk }) {
+            for my $morph (@{ $chunk->get_morph }) {
+                if (defined $score_of{$morph_id} and $score_of{$morph_id} > 0) {
+                    $morph->set_relation($morph->get_relation.' EVENT');
+                }
+                $morph_id++;
+            }
+        }
     }
 
     close $test_file;

@@ -18,6 +18,7 @@ our $VERSION = "1.3";
 @EXPORT_OK = qw();
 
 use vars qw($DEBUG $MEDIUM %options);
+my $DEBUG = 0;
 
 # Import environment variables
 use ENA::Conf;
@@ -102,7 +103,7 @@ sub set_feature {
     foreach my $key (keys %feature) {
         last if $options{b};   # -b のときは共起は見ない
 
-        carp "FEATURE_KEY: ", $key if $DEBUG;
+        carp "FEATURE_KEY: ", $key if $DEBUG and $key ne 'morph_id';
         my $threshold = 1.0;   # 1.0 以下はそれっぽくない
 
         if ($key =~ m/^edr_sem_([^_]*)$/xms) {
@@ -166,7 +167,7 @@ sub set_feature {
         }
     }
 
-    if ($options{d}) {
+    if ($DEBUG) {
         # デバッグ用
         $feature_of{get_morph_id()} .=  '# ';
         $feature_of{get_morph_id()} .=  'MORPH_ID:'. $feature{morph_id}. q{,};
@@ -224,6 +225,8 @@ sub make_train_data {
 
     my $sentence = $text->get_surface;
 
+    # FIXME: not defined
+    last if !$text->get_chunk;
     my @chunks = @{ $text->get_chunk };
 
     for (my $i = 0; $i < @chunks; $i++) {
@@ -279,13 +282,13 @@ sub make_train_data {
             my %feature;
             if ($morph->get_pos =~ /^名詞-サ変/) {
                 # サ変名詞が見つかった
-                carp "SAHEN: $morph->_get_surface\n" if $DEBUG;
+                carp 'SAHEN: ', $morph->get_surface if $DEBUG;
 
                 # 分類語彙表と EDR を見る
                 my $bgh_id  = $bgh->get_class_id_frac($morph->get_surface);
                 my %edr_pat = $edr->get_pattern($morph->get_surface);
 
-                carp "BGH: $bgh_id, WF: $morph->get_surface" if $DEBUG;
+                carp "BGH: $bgh_id, WF: ", $morph->get_surface if $DEBUG;
 
                 # 形態素の素性
                 $feature{head_word_form}    = $head_word_form;
@@ -384,15 +387,15 @@ sub make_train_data {
                 # 事態タグが付いているかどうか
                 if ($morph->get_type eq 'EVENT') {
                     $feature{event} = 1; 
-                    if ($morph->get_case('GA')) {
-                        $feature{event} += 2;
-                    }
-                    if ($morph->get_case('WO')) {
-                        $feature{event} += 4;
-                    }
-                    if ($morph->get_case('NI')) {
-                        $feature{event} += 8;
-                    }
+                    #if ($morph->get_case('GA')) {
+                    #    $feature{event} += 2;
+                    #}
+                    #if ($morph->get_case('WO')) {
+                    #    $feature{event} += 4;
+                    #}
+                    #if ($morph->get_case('NI')) {
+                    #    $feature{event} += 8;
+                    #}
                 }
 
                 # 名詞としての処理
@@ -432,7 +435,7 @@ sub make_train_data {
 sub add_noun_feature {
     my ($noun_ref, $feature_ref) = @_;
     my $edr_pat = $feature_ref->{edr_pat};
-    carp "EDR_PAT: $feature_ref->{head_word_form}\n",
+    carp 'EDR_PAT: ', $feature_ref->{head_word_form},
         Dumper(%$edr_pat) if $DEBUG;
 
     # 格がなければなにもしない
