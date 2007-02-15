@@ -77,14 +77,12 @@ if (defined $options{m}) {
     ($model_file = $train_file) =~ s/\.*/\.svmmodel/;
 }
 my @learn;
-if (defined $options{t}) {
-    if ($options{t} eq 'svm_light') {
-        @learn = ("svm_light_learn", "-t", "1", "-d", "1",
-                     "$train_file", "$model_file");
-    } else {
-        @learn = ("svm_learn", "-t", "1", "-d", "1",
-                     "$train_file", "$model_file");
-    }
+if (defined $options{t} and $options{t} eq 'svm_light') {
+    @learn = ("svm_light_learn", "-t", "1", "-d", "2",
+                 "$train_file", "$model_file");
+} else {
+    @learn = ("svm_learn", "-t", "1", "-d", "2",
+                 "$train_file", "$model_file");
 }
 my $temp_dir   = tempdir( CLEANUP => 1 );
 
