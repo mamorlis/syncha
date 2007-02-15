@@ -60,7 +60,7 @@ dict ディレクトリをその中に配置します。
 mamoru-k@elm syncha % pwd
 /work/mamoru-k/syncha
 mamoru-k@elm syncha % ls
-CVS  Makefile  README  bin  dict  ena  resolveZero  sentence_splitter
+CVS  Makefile  README  bin  dict  ena  resolveZero
 
 標準入力から日本語文を入れると標準出力に解析結果を出します(入力は SJIS/
 EUC-JP/ISO-2022-JP/UTF-8 を受け付けますが、出力は EUC-JP になります)。
