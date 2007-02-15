@@ -21,6 +21,11 @@ use FindBin qw($Bin);
 use lib "$Bin/../lib";
 #use ENA;
 
+BEGIN {
+    unless (eval "use BerkeleyDB; 1") {
+        use DB_File;
+    }
+}
 use File::Temp qw(tempfile);
 
 my %score_of;
@@ -34,6 +39,9 @@ sub new {
     my $cab        = shift;
     my $self       = {};
     bless $self, $class;
+
+    # initialize
+    $self->unamb;
 
     #
     # テストファイルに
@@ -95,7 +103,9 @@ sub new {
         next if !$sentence->get_chunk;
         for my $chunk (@{ $sentence->get_chunk }) {
             for my $morph (@{ $chunk->get_morph }) {
-                if (defined $score_of{$morph_id} and $score_of{$morph_id} > 0) {
+                if (defined $score_of{$morph_id} and $score_of{$morph_id} > 0
+                    or defined $morph->next and ${$morph->next}->get_pos !~ m/^動詞/gmx
+                    and $self->unamb($morph->get_surface)) {
                     $morph->set_relation($morph->get_relation.' EVENT');
                 }
                 $morph_id++;
@@ -105,6 +115,38 @@ sub new {
 
     close $test_file;
 
+    return $self;
+}
+
+sub DESTROY {
+    my $self = shift;
+    untie %{ $self->{unamb} };
+}
+
+sub unamb {
+    my $self = shift;
+    if (@_ > 0) {
+        my $noun = shift;
+        if (exists $self->{unamb}{$noun}) {
+            return $self->{unamb}{$noun};
+        } else {
+            return undef;
+        }
+    } else {
+        # initialize
+        no strict 'subs';
+        my $event_unamb_db = $Bin.'/../../dict/db/event-unamb.db';
+        if (eval 'require BerkeleyDB; 1') {
+            tie %{ $self->{unamb} }, 'BerkeleyDB::Hash',
+                -Filename => $event_unamb_db,
+                -Flags    => DB_RDONLY,
+                -Mode     => 0444
+                or die "Cannot open $event_unamb_db:$!\n";
+        } elsif (eval 'require DB_File; 1') {
+            tie %{ $self->{unamb} }, 'DB_File', $event_unamb_db, '0444', $DB_HASH
+                or die "Cannot open $event_unamb_db:$!\n";
+        }
+    }
     return $self;
 }
 

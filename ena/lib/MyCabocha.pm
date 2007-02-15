@@ -570,6 +570,15 @@ sub set_morph {
 
     carp Dumper $morph if $DEBUG;
 
+    # add pointers to next and previous morphs
+    if (!defined $self->{morph}) {
+        $morph->{prev} = undef;
+    } else {
+        ${ $self->{morph} }[-1]->{next} = \$morph;
+        $morph->{prev} = \${ $self->{morph} }[-1];
+    }
+    $morph->{next} = undef;
+
     push @{ $self->{morph} }, $morph;
 }
 
@@ -1295,6 +1304,28 @@ sub get_case {
     my $case = shift;
 
     $self->{$case};
+}
+
+=item * prev
+
+Get a pointer to previous morpheme.
+
+=cut
+
+sub prev {
+    my $self = shift;
+    $self->{prev};
+}
+
+=item * next
+
+Get a pointer to next morpheme.
+
+=cut
+
+sub next {
+    my $self = shift;
+    $self->{next};
 }
 
 1;
