@@ -20,6 +20,7 @@ my $cab = new MyCabocha(*STDIN);
 #my @lines = <>;
 #
 for my $text (@{ $cab->get_text }) {
+    next unless $text->get_chunk;
     for my $chunk (@{ $text->get_chunk }) {
         for my $morph (@{ $chunk->get_morph }) {
             if ($morph->get_relation =~ m/EVENT:(\S+)/) {
@@ -69,6 +70,7 @@ for my $id (keys %id_of) {
 }
 
 for my $text (@{ $cab->get_text }) {
+    next unless $text->get_chunk;
     for my $chunk (@{ $text->get_chunk }) {
         for my $morph (@{ $chunk->get_morph }) {
             if ($morph->get_relation =~ m/EVENT:(\S+)/) {
@@ -77,6 +79,8 @@ for my $text (@{ $cab->get_text }) {
                 my $new_case = join(q{,}, @cases);
                 (my $relation = $morph->get_relation) =~ s/$1/$new_case/;
                 $morph->set_relation($relation);
+            } elsif ($morph->get_relation =~ m/(TYPE:\S+)/) {
+                # does nothing?
             }
         }
     }

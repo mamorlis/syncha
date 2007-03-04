@@ -119,6 +119,13 @@ while (<>) {
         exit 3;
     }
 
-    my $result = `echo "$zero" | $fix_id` or croak "Cannot exec $fix_id:$!";
+    #$fh = tempfile();
+    #($fh, $temp_file) = tempfile();
+    #print $fh $zero;
+    #close $fh;
+
+    chomp $zero;
+    my $result = `echo '$zero' | $fix_id` or croak "Cannot exec $fix_id:$!";
+    #my $result = `echo '$zero'` or croak "Cannot exec $fix_id:$!";
     print $result;
 }
