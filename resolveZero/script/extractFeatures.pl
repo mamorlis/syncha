@@ -15,7 +15,9 @@ unshift @INC, $miscPath;
 # my $path = __FILE__; $path =~ s|[^/]+$||; unshift @INC, $path;
 require 'check_ntt.pl';
 # require 'check_log_like.pl';
-require 'calc_mi.pl';
+#require 'calc_mi.pl';
+use NCVTool;
+my $ncvtool = new NCVTool;
 
 # my $path = __FILE__; $path =~ s|[^/]+$||;
 
@@ -685,7 +687,10 @@ sub ext_ana_cand_t {
 #     }
 
     # MI
-    my $score = &COOC::set_fe($cand, $pred, $case, 'MI');
+    #my $score = &COOC::set_fe($cand, $pred, $case, 'MI');
+    my %case_of = ( 'GA' => '¤¬', 'NI' => '¤Ë', 'WO' => '¤ò' );
+    my $q = $cand->HEAD_WF.':'.$case_of{$case}.':'.$pred->PRED;
+    my $score = $ncvtool->get_score($q);
     if ($score) {
 	if ($score > 0) {
 	    for (my $i=1;$i<=$score;$i++) {
