@@ -71,7 +71,7 @@ use File::Basename;
 use Getopt::Std;
 use vars qw($opt_h $opt_i $opt_r $opt_o $opt_c $opt_t);
 
-getopts('i:o:t:c:h');
+getopts('i:r:o:t:c:h');
 
 my $usage =<<"USAGE";
 usage: $0 [-h] -i tgr.d [-r chasenrc] [-o mod.d] [-c cab.d] [-t txt.d]

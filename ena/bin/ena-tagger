@@ -59,15 +59,20 @@ my $usage = <<__USAGE__;
 USAGE: $0 [-t toolkit] file.cab
 __USAGE__
 
-die $usage if @ARGV < 1;
 die $usage if $opt_h;
 
 # main
 my $cab_file   = shift;
 my $toolkit    = $opt_t || 'svm_light';
-open my $cab_fh, '<', $cab_file or die "Cannot open $cab_file:$!\n";
-my $cab       = new MyCabocha ($cab_fh);
-close $cab_fh;
+my $cab;
+if (my $cab_file = $ARGV[1]) {
+    open my $cab_fh, '<', $cab_file or die "Cannot open $cab_file:$!\n";
+    $cab = new MyCabocha ($cab_fh);
+    close $cab_fh;
+} else {
+    $cab = new MyCabocha (*STDIN);
+}
+
 my $ena_event = new ENA::Event ($toolkit, $cab);
 for my $sentence (@{ $cab->get_text }) {
     $sentence->puts;
