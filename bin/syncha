@@ -88,33 +88,21 @@ my $inter_param  = $options{e} || 0;
 
 local $/ = undef;
 while (<>) {
-    my $fh = tempfile();
-    my $temp_file;
-    ($fh, $temp_file) = tempfile();
-    print $fh $_;
-    close $fh;
-
-    my $cab = `$splitter $temp_file | $chasen $chasen_flag | $cabocha -I1 -f1`
+    my $cab = `echo "$_" | $splitter | $chasen $chasen_flag | $cabocha -I1 -f1`
         or croak "Cannot exec $cabocha:$!";
-    unlink $temp_file;
     if ($options{'1'}) {
         print $cab;
         exit 1;
     }
 
-    $fh = tempfile();
-    ($fh, $temp_file) = tempfile();
-    print $fh $cab;
-    close $fh;
-
-    my $ena = `$ena_tagger $temp_file` or croak "Cannot exec $ena_tagger:$!";
-    unlink $temp_file;
+    my $ena = `echo "$cab" | $ena_tagger` or croak "Cannot exec $ena_tagger:$!";
     if ($options{'2'}) {
         print $ena;
         exit 2;
     }
 
-    $fh = tempfile();
+    my $fh = tempfile();
+    my $temp_file;
     ($fh, $temp_file) = tempfile();
     print $fh $ena;
     close $fh;
@@ -131,13 +119,6 @@ while (<>) {
         exit 3;
     }
 
-    $fh = tempfile();
-    ($fh, $temp_file) = tempfile();
-    print $fh $zero;
-    close $fh;
-
-    #my $result = `cat $temp_file` or croak "Cannot exec $fix_id:$!";
-    my $result = `cat $temp_file | $fix_id` or croak "Cannot exec $fix_id:$!";
-    unlink $temp_file;
+    my $result = `echo "$zero" | $fix_id` or croak "Cannot exec $fix_id:$!";
     print $result;
 }
