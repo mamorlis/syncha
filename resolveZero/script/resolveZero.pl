@@ -121,15 +121,14 @@ sub resolve_zero {
 	    if ($b->PRED) {
 		my $pred = $b;
 		my @type = ();
-		if ($b->HEAD_POS =~ /^튼살/) {
-
-		    if ($db{$b->PRED}) {
- 			@type = split ' ', $db{$b->PRED};
-		    } else {
-			@type = ('GA', 'WO', 'NI');
-		    }
+		if ($db{$b->PRED}) {
+		    @type = split ' ', $db{$b->PRED};
 		} else {
-		    @type = ('GA');
+		    if ($b->HEAD_POS =~ /^튼살/) {
+			@type = ('GA', 'WO', 'NI');
+		    } else {
+			@type = ('GA');
+		    }
 		}
 		for my $type (@type) {
 # 		    print STDERR 'intra ant', "\t", $type, "\n";

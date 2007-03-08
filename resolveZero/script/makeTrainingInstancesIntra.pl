@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use Getopt::Std;
 
+use Data::Dumper;
+
 my $usage = <<USG;
 ./makeTrainingInstancesIntra.pl -d expr_dir -n #num -T {GA,WO,NI}
 -m: mod_dir
@@ -26,7 +28,6 @@ die $usage unless ($options{T});
 die $usage if ($options{T} !~ m/^(?:GA|WO|NI)$/);
 die $usage unless ($options{m});
 
-# print STDERR 'test2: ', $0, "\n";
 
 # my $scriptPath = $ENV{PWD}.'/'.__FILE__; 
 my $scriptPath = __FILE__; $scriptPath =~ s|//|/|g;
@@ -48,8 +49,7 @@ sub main {
 }
 
 sub ext_num2fe {
-    my $m = Mod->new($options{m}); my @t = @{$m->txt};
-    my $t_num = @t;
+    my $m = Mod->new($options{m}); my @t = @{$m->txt}; my $t_num = @t;
 
     my %num2fe = ();
     for (my $tid=0;$tid<$t_num;$tid++) {
@@ -63,12 +63,7 @@ sub ext_num2fe {
 	    my $s = $s[$sid]; my @b = @{$s->Bunsetsu}; my $b_num = @b;
 	    for (my $bid=0;$bid<$b_num;$bid++) {
 		my $b = $b[$bid];
-
-# 		if ($b->PRED_ID and $b->{'ZERO_'.$options{T}} and 
-# 		    &check_dep_case($b, $options{T}) == 0) {
-#  		if ($b->PRED_ID and $b->{'ZERO_'.$options{T}}) {
  		if ($b->PRED_ID and $b->{$options{T}}) {
-
 		    if ($options{I} and $b->IN_QUOTE == 0) {
 			$cl->add($b) if ($b->NOUN);
 			next;
@@ -87,11 +82,8 @@ sub ext_num2fe {
 
 		    my @out = &ext_fe_bact($S, $pred, $options{T}, $cl);
 
-# 		    for my $o (@out) {
-# 			print STDERR 'out: ', $o, "\n";
-# 		    }
 		    if (@out) {
-			for my $o (@out) { $num2fe{$num}{$o} = 1; }
+ 			for my $o (@out) { $num2fe{$num}{$o} = 1; }
 		    }
 		}
 		# after making training instances, add noun to CenterList
@@ -113,10 +105,6 @@ sub ext_fe_bact {
 
     my %out = ();
 
-#     for (my $cid=0;$cid<$c_num;$cid++) {
-# 	my $c = $c[$cid]; &mark_path($pred, $c, $s); # ???
-#     }
-    
     # 各先行詞ごとに比較する(複数の先行詞の存在を仮定する)
     for (my $cid=0;$cid<$c_num;$cid++) {
 	if ($c[$cid]->ID and $c[$cid]->ID eq $pred->{$case}) {
@@ -128,8 +116,6 @@ sub ext_fe_bact {
 		if ($cid < $CID) { # つまり cid(ant) よりも CID(wr) が文の前方にある．
 		    my $fe = &ext_features_comp($pred, $ant, $wr, $cl, $s, $case, \%options);
 		    $out{'+1 '.$fe} = 1;
-
-
 		} else { # $cid > $CID
 		    my $fe = &ext_features_comp($pred, $wr, $ant, $cl, $s, $case, \%options);
 		    $out{'-1 '.$fe} = 1;
@@ -137,10 +123,6 @@ sub ext_fe_bact {
 	    }
 	}
     }
-
-#     for (keys %out) {
-# 	print STDERR 'fe: ', $_, "\n";
-#     }
 
     return keys %out;
 }

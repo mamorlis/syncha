@@ -15,7 +15,6 @@ BEGIN {
     }
 }
 
-# my $scriptPath = $ENV{PWD}.'/'.__FILE__; 
 my $scriptPath = __FILE__; $scriptPath =~ s|//|/|g;
 $scriptPath =~ s|/\./|/|g; 
 $scriptPath =~ s|[^/]+$||;
@@ -24,14 +23,7 @@ my $rootPath = $scriptPath; $rootPath =~ s|[^/]+/$||;
 use FindBin qw($Bin);
 my $dbPath = $Bin.'/../../dict/db/';
 
-# print STDERR __FILE__, "\n";
-# print STDERR $scriptPath, "\n";
-# print STDERR $miscPath, "\n";
-# print STDERR $rootPath, "\n";
-# print STDERR $gdbmPath, "\n";
-
 unshift @INC, $miscPath;
-require 'check_edr.pl';
 require 'check_pronoun_type.pl';
 require 'add_func_exp.pl';
 
@@ -53,16 +45,17 @@ my %rengo;
 sub open_cab_file {
     my $file = shift;
     my $tid = shift;
-    $/ = "EOS\n";
     my @s = ();
-    open 'FL', $file or die $!;
-    while (<FL>) {
-	chomp; my $in = $_;
-	next unless ($in);
-	push @s, Sentence->new($in);
+    {
+	local $/ = "EOS\n";
+	open 'FL', $file or die $!;
+	while (<FL>) {
+	    chomp; my $in = $_;
+	    next unless ($in);
+	    push @s, Sentence->new($in);
+	}
+	close FL;
     }
-    close FL;
-
     my $s_num = @s;
     for (my $sid=0;$sid<$s_num;$sid++) {
 	my @b = @{$s[$sid]->Bunsetsu}; my $b_num = @b;
@@ -85,11 +78,12 @@ sub open_cab_file {
 
 sub open_cab_file_from_stdin {
     my @s = ();
-    $/ = "EOS\n";
-    while (<>) {
-	chomp; push @s, Sentence->new($_);
+    {
+	local $/ = "EOS\n";
+	while (<>) {
+	    chomp; push @s, Sentence->new($_);
+	}
     }
-    $/ = "\n";
 
     my $s_num = @s;
     for (my $sid=0;$sid<$s_num;$sid++) {
@@ -1036,33 +1030,6 @@ sub PRE_DEFINITE {
 	$self->{PRE_DEFINITE} = $_[0];
     } else {
 	return $self->{PRE_DEFINITE};
-    }
-}
-
-sub EDR_PERSON {
-    my $self = shift; $self->KEYS('EDR_PERSON');
-    if (@_) {
-	$self->{EDR_PERSON} = $_[0];
-    } else {
-	return $self->{EDR_PERSON};
-    }
-}
-
-sub EDR_ORG {
-    my $self = shift; $self->KEYS('EDR_ORG');
-    if (@_) {
-	$self->{EDR_ORG} = $_[0];
-    } else {
-	return $self->{EDR_ORG};
-    }
-}
-
-sub ANIMACY {
-    my $self = shift; $self->KEYS('ANIMACY');
-    if (@_) {
-	$self->{ANIMACY} = $_[0];
-    } else {
-	return $self->{ANIMACY};
     }
 }
 
@@ -2143,80 +2110,6 @@ sub is_zero {
     }
 }
 
-# # copy constructor
-# sub copy {
-#     my $self       = shift;
-#     my $zero_id    = shift; # -2 >= zero_id
-#     my $type       = shift; # '¦Õ¥¬' ¤Ê¤É
-#     my $ana        = shift;
-    
-#     my $copy = Bunsetsu->new($zero_id, $ana->id, 'D', $self->head,
-# 			     $self->func, $self->weight, {$ana->id=>[]});
-#     my @mor = @{$self->Mor};
-#     my @cp_mor = ();
-#     my $head = $copy->head;
-#     for (my $i=0;$i<=$head;$i++) {
-# 	push @cp_mor, $mor[$i]->copy;
-#     }
-#     my $case;
-#     $case = Mor::new('Mor', '¤¬', '¥¬', '¤¬', '½õ»ì-³Ê½õ»ì-°ìÈÌ',
-#   		     '', '', 'O') if ($type =~ /¥¬$/);
-#     $case = Mor::new('Mor', '¤ò', '¥ò', '¤ò', '½õ»ì-³Ê½õ»ì-°ìÈÌ',
-# 		     '', '', 'O') if ($type =~ /¥ò$/);
-#     $case = Mor::new('Mor', '¤Ë', '¥Ë', '¤Ë', '½õ»ì-³Ê½õ»ì-°ìÈÌ',
-# 		     '', '', 'O') if ($type =~ /¥Ë$/);
-#     push @cp_mor, $case;
-
-#     $copy->Mor(\@cp_mor);
-#     if ($ana->AUX or $ana->voice eq 'passive') {
-	
-#     } else {
-# 	$copy->EQ_TYPE('¥¬', $ana->PRED_ID) if ($type =~ /¥¬$/);
-# 	$copy->EQ_TYPE('¥¬', $ana->PRED_ID) if ($type =~ /¥¬$/);
-# 	$copy->EQ_TYPE('¥¬', $ana->PRED_ID) if ($type =~ /¥¬$/);	
-#     }
-#     $copy->WF($self->WF);
-#     $copy->dtr([]);
-
-#     $self->CONJ_TYPE('');
-#     $self->CONJ('');
-#     $copy->EQ($self->EQ);
-#     $copy->NOUN($self->NOUN);
-#     $copy->PRED($self->PRED);
-#     $copy->CASE($case->WF);
-#     $copy->CASE_H($case->WF);
-#     $copy->CASE_ORG($case->WF);    
-#     $copy->STRING($self->WF.$case->WF);
-#     $copy->DEFINITE($self->DEFINITE);
-#     $copy->PRE_DEFINITE($self->PRE_DEFINITE);
-#     $copy->EDR_PERSON($self->EDR_PERSON);
-#     $copy->EDR_ORG($self->EDR_ORG);
-#     $copy->ANIMACY($self->ANIMACY);
-#     $copy->PRONOUN_TYPE($self->PRONOUN_TYPE);
-#     $copy->SENT_INDEX($ana->SENT_INDEX);
-#     $copy->HEAD_POS($self->HEAD_POS);
-#     ($copy->HEAD_POS =~ /^Ì¾»ì(?!-Èó¼«Î©)/)?
-# 	$copy->I_NOUN(1) : $copy->I_NOUN(0);
-#     $copy->HEAD_NE($self->HEAD_NE);
-#     $copy->HEAD_WF($self->HEAD_WF);
-#     $copy->HEAD_BF($self->HEAD_BF);            
-#     $copy->HEAD_NOUN($self->HEAD_NOUN);
-# #      $copy->AGT(1) if ($type eq 'GA');
-#     $copy->ZERO_GA(1) if ($type =~ /¥¬$/);
-#     $copy->ZERO_WO(1) if ($type =~ /¥ò$/);
-#     $copy->ZERO_NI(1) if ($type =~ /¥Ë$/);    
-#     # OBJ, IOB¤âºîÀ®¤¹¤ë
-#     my $main_head = ($ana->MAIN_HEAD eq 'MAIN_HEAD')? $ana->id : $ana->MAIN_HEAD;
-#     $copy->MAIN_HEAD($main_head);
-#     $copy->SENT_BEGIN($ana->SENT_BEGIN);
-#     $copy->IN_QUOTE(1) if ($ana->IN_QUOTE);
-#     $copy->QUOTE($ana->QUOTE) if ($ana->QUOTE);    
-#     $copy->SPEAKER($self->SPEAKER) if ($self->SPEAKER);
-# #      $copy->is_exophora(0);
-#     # sent_begin, main_head, embedded
-#     return $copy;
-# }
-
 # copy constructor
 sub copy2 {
     my $self = shift;
@@ -2241,9 +2134,6 @@ sub copy2 {
     $copy->STRING($self->STRING);
     $copy->DEFINITE($self->DEFINITE);
     $copy->PRE_DEFINITE($self->PRE_DEFINITE);
-    $copy->EDR_PERSON($self->EDR_PERSON);
-    $copy->EDR_ORG($self->EDR_ORG);
-    $copy->ANIMACY($self->ANIMACY);
     $copy->PRONOUN_TYPE($self->PRONOUN_TYPE);
     $copy->HEAD_POS($self->HEAD_POS);
     ($copy->HEAD_POS =~ /^Ì¾»ì(?!-Èó¼«Î©)/)?
@@ -2270,23 +2160,6 @@ sub puts_xml_end {
     my $self = shift;
     return '</b>';
 }
-
-# sub puts_mod {
-#     my $self = shift;
-#     my @m = @{$self->Mor};
-#     my $out = '';
-#     $out .= '* '.$self->id.' '.$self->dep.$self->dep_type.' '.
-# 	    $self->head.'/'.$self->func.' '.$self->weight."\n";
-#     $out .= '! ID:'.$self->ID."\n" if ($self->ID);
-#     $out .= '! PRED_ID:'.$self->PRED_ID."\n" if ($self->PRED_ID);
-#     for ('GA', 'WO', 'NI') {
-# 	$out .= '! '.$_.':'.$self->{$_}."\n" if ($self->{$_});
-#     }
-#     for (@m) {
-# 	$out .= $_->puts;
-#     }
-#     return $out;
-# }
 
 sub puts_mod {
     my $self = shift;
@@ -2419,9 +2292,6 @@ sub new {
 	$cab[$i]->ZERO(&check_zero($cab[$i]));
 	$cab[$i]->DEFINITE(&ext_definite($cab[$i]));
 	$cab[$i]->PRE_DEFINITE(&ext_pre_definite($cab[$i], @cab));	
-	$cab[$i]->EDR_PERSON(&EDR::check_edr_person($cab[$i]));
-	$cab[$i]->EDR_ORG(&EDR::check_edr_org($cab[$i]));
-	$cab[$i]->ANIMACY(&check_animacy($cab[$i]));
 	$cab[$i]->PRONOUN_TYPE(&PRONOUN::check_pronoun_type($cab[$i]));
 	$cab[$i]->EVENT(&ext_event($cab[$i]));
 	$cab[$i]->descendant(&ext_descendant($i, @cab));
@@ -2900,13 +2770,6 @@ sub ext_event {
     return 0;
 }
 
-sub check_animacy {
-    my $b = shift;
-    return unless ($b->HEAD_NE);
-    return ($b->EDR_PERSON or $b->EDR_ORG or
-	    $b->HEAD_NE =~ /(?:PERSON|ORGANIZATION)/)? 'ANIMACY' : '';
-}
-
 sub ext_conj_val {
     my $b = shift;
     return '' unless ($b->PRED);
@@ -3013,8 +2876,6 @@ sub check_embedded_sub {
     $b->EMBEDDED($depth);
     return unless (@dtr);
 
-#      if (!$b->PRED_ID and $b->HEAD_POS =~ /^Ì¾»ì/ and $b->MAIN_HEAD and $b->MAIN_HEAD ne 'MAIN_HEAD') { # Ê¸Ëö¤ÎÌ¾»ì¶ç¤ÏÌµ»ë
-#      if (!$b->PRED_ID and $b->NOUN and $b->MAIN_HEAD and $b->MAIN_HEAD ne 'MAIN_HEAD') { # Ê¸Ëö¤ÎÌ¾»ì¶ç¤ÏÌµ»ë
     if ($b->NOUN and $b->PRED_ID and !$b->I_NOUN) {
 	$b->EMBEDDED($depth+1);
     }

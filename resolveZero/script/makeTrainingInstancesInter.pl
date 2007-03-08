@@ -201,7 +201,7 @@ sub output_train {
     for (my $num=0;$num<$options{n};$num++) {
 	open 'TRN', '>'.$options{d}.'/train_inter_t_'.$num;
 	for (my $i=0;$i<$options{n};$i++) {
-	    next if ($num == $i);
+	    next if ($options{n} != 1 and $num == $i);
 	    open 'NUM', $options{d}.'/fe_inter_t_'.$i;
 	    $/ = "\n";
 	    while (<NUM>) { print TRN $_; }

@@ -6,7 +6,7 @@ use warnings;
 my $scriptPath = $ENV{PWD}.'/'.__FILE__; 
 $scriptPath =~ s|/\./|/|g; $scriptPath =~ s|[^/]+$||;
 unshift @INC, $scriptPath;
- require 'cab.pl';
+require 'cab.pl';
 
 package Mod;
 
@@ -19,7 +19,7 @@ sub new {
     my @file = ();
     for my $mod_dir (@mod_dir) {
 	opendir 'DIR', $mod_dir or die "Error: not exists mod_dir\n";
-	my @tmpfile = sort grep /mod$/, readdir DIR; my $f_num = @tmpfile;
+ 	my @tmpfile = sort grep /mod$/, readdir DIR; my $f_num = @tmpfile;
 	closedir DIR;
  	for (my $i=0;$i<$f_num;$i++) { push @file, $mod_dir.$tmpfile[$i]; }
     }

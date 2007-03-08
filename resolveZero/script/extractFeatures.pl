@@ -3,23 +3,13 @@
 use strict;
 use warnings;
 
-# my $ZERO_PATH = $ENV{ZERO_PATH};
-# unshift @INC, $ZERO_PATH.'/ver0/';
-
-# my $scriptPath = $ENV{PWD}.'/'.__FILE__; 
 my $scriptPath = __FILE__; $scriptPath =~ s|//|/|g;
 $scriptPath =~ s|/\./|/|g; $scriptPath =~ s|[^/]+$||;
 my $miscPath = $scriptPath.'misc/';
-# print STDERR $miscPath, "\n";
 unshift @INC, $miscPath;
-# my $path = __FILE__; $path =~ s|[^/]+$||; unshift @INC, $path;
-require 'check_ntt.pl';
-# require 'check_log_like.pl';
-#require 'calc_mi.pl';
+
 use NCVTool;
 my $ncvtool = new NCVTool;
-
-# my $path = __FILE__; $path =~ s|[^/]+$||;
 
 # -----------------------------------------------------------
 # svm (inter)
@@ -28,17 +18,12 @@ my $ncvtool = new NCVTool;
 sub ext_features_svm_inter_t {
     my ($pred, $r, $l, $cl, $t, $case, $optref) = @_; # $case: GA, WO, NI
 
-#     $optref->{b} = 1; ### ext
-
     # left 
     my $l_label = 'L_';
-#     my $fe_l_p  = &ext_ana_t_inter($pred, $l_label.'P_'); # pred only
     my $fe_l_p  = &ext_ana_t($pred, $l_label.'P_'); # pred only
-#     my $fe_l_c  = &ext_cand_t_inter($l, $l_label.'A_CAND_', $cl); # cand only
     my $fe_l_c  = &ext_cand_t($l, $l_label.'A_CAND_', $cl); # cand only
     my $fe_l_pc = &ext_ana_cand_t($pred, $l, $l_label.'A_AC_', $case); # pred-cand
     my $l_clabel = $l_label.'A';
-#     my $l_cinfo = '('.$l_clabel.&ext_b_info_sub($l_clabel, $l).')'; 
     my $l_cinfo = &ext_b_info_sub_svm($l_clabel, $l);
     my $l_plabel = $l_label.'P';
     my $l_pinfo = &ext_b_info_sub_svm($l_plabel, $pred);
@@ -110,7 +95,6 @@ sub ext_features_comp {
     my @fe = ();
 
     if ($optref->{S}) {
-# 	$out = &ext_one_str_new2($pred, $cand, $cl, $s, $case, $label, $optref);
 	push @fe, &ext_one_new_str($pred, $l, $r, $cl, $s, $case, $optref);
     } else {
 	push @fe, &ext_one_pair_bact($pred, $r, $cl, $s, $case, 'R_', $optref);
@@ -118,9 +102,6 @@ sub ext_features_comp {
 	# R_L pair で素性を抽出する．
     }
 
-#     my $LABEL = &ext_label($b, $pred, $cand, $label);
-
-#     push @fe, &ext_two_cands_bact($r, $l, $cl, $s, $case, 'LR_');
     return '(~ROOT'.join('', @fe).')';
 }
 
@@ -135,17 +116,10 @@ sub ext_features_one {
 sub ext_one_pair_bact {
     my ($pred, $cand, $cl, $s, $case, $label, $optref) = @_;
 
-#     my $out = '';
-#     if ($optref->{s}) {
-# 	$out = &ext_one_str_new($pred, $cand, $cl, $s, $case, $label, $optref);
-#     } else {
-#     }
-
     my $fe_p  = &ext_ana_t_bact($pred, $label.'P_'); # pred only
     my $fe_c  = &ext_cand_t_bact($cand, $label.'A_CAND_', $cl); # cand only
     my $fe_pc = &ext_ana_cand_t_bact($pred, $cand, $label.'A_AC_', $case); # pred-cand
 
-#     return $out;
     if ($optref->{b}) { # baseline
 	my $clabel = $label.'A';
 	my $cinfo = '('.$clabel.&ext_b_info_sub($clabel, $cand).')'; 
@@ -305,17 +279,6 @@ sub ext_one_bunsetsu_info {
     $out = $LABEL.$binfo;
 
     $b->left_b(0); $b->right_b(0);
-    # ↓述語，候補の箇所に素性を埋め込む場合は以下の記述を使う．
-#     if ($b->sid eq $pred->sid and $b->bid eq $pred->bid) { # PRED
-#  	my $fe = &ext_ana_t_bact($pred, $LABEL.'_');
-# 	$out = $LABEL.$fe.$binfo;
-#     } elsif ($b->sid eq $cand->sid and $b->bid eq $cand->bid) { # ANT
-# 	my $fe = &ext_cand_t_bact($b, $LABEL.'_CAND_', $cl);
-# 	my $fe2 = &ext_ana_cand_t_bact($pred, $b, $LABEL.'_AC_', $case);
-# 	$out = $LABEL.$fe.$fe2.$binfo;
-#     }  else { # B
-# 	$out = $LABEL.$binfo;
-#     }
 
     return $out;
 }
@@ -378,13 +341,9 @@ sub ext_label2 {
 
 
 
-
-
 # ------
 
 sub ext_features_t {
-#     my ($pred, $left, $right, $case, $cl, $logref) = @_;
-#     my ($pred, $left, $right, $case, $cl) = @_;
     my ($pred, $right, $left, $case, $cl) = @_;
     
     my @fe = ();
@@ -517,8 +476,6 @@ sub ext_cand_t {
         $ne =~ s/^(?:LOCATION|ORGANIZATION)$/LOC_ORG/;
         push @fe, 'NE_'.$ne;
     }
-    push @fe, $cand->EDR_PERSON if ($cand->EDR_PERSON); # EDR_PERSON
-    push @fe, $cand->EDR_ORG if ($cand->EDR_ORG); # EDR_ORG
     push @fe, $cand->PRONOUN_TYPE if ($cand->PRONOUN_TYPE); # PRONOUN_TYPE
     push @fe, $cand->SENT_END if ($cand->SENT_END); # SENT_END
     push @fe, $cand->SENT_BEGIN if ($cand->SENT_BEGIN); # SENT_BEGIN     
@@ -536,10 +493,6 @@ sub ext_cand_t {
         $cand->id eq $cand->MAIN_HEAD) {
         push @fe, 'DEP_MAIN_HEAD';
     }
-
-    # (ゼロ代名詞は候補になっているとして)
-    # もし対象が補完されたゼロ代名詞ならば，
-    # 表層何格か
 
     # Center List の情報をここに
     my $clrank  = $cl->rank($cand);
@@ -575,8 +528,6 @@ sub ext_cand_t_inter {
         $ne =~ s/^(?:LOCATION|ORGANIZATION)$/LOC_ORG/;
         push @fe, 'NE_'.$ne;
     }
-    push @fe, $cand->EDR_PERSON if ($cand->EDR_PERSON); # EDR_PERSON
-    push @fe, $cand->EDR_ORG if ($cand->EDR_ORG); # EDR_ORG
     push @fe, $cand->PRONOUN_TYPE if ($cand->PRONOUN_TYPE); # PRONOUN_TYPE
     push @fe, $cand->SENT_END if ($cand->SENT_END); # SENT_END
     push @fe, $cand->SENT_BEGIN if ($cand->SENT_BEGIN); # SENT_BEGIN     
@@ -651,8 +602,6 @@ sub ext_ana_cand_t {
 	    }
 	} elsif ($pred->bid =~ /^\d+$/) {
 	    my $bid = (split '_', $cand->bid)[0];
-# 	print STDERR 'bid: ', $bid, "\n";
-# 	print STDERR 'pred: ', $pred, "\n";
 	    if ($bid < $pred->bid) {
 		push @fe, 'CAND_PRECEDES_ANA'; # (1)
 	    } elsif ($bid > $pred->bid) {
@@ -672,38 +621,26 @@ sub ext_ana_cand_t {
 			    $pred->dep->bid eq $cand->bid);
     }
 
-    # 語彙大系を用いた選択制限
-#     my $select = &NTT::check_select_rest($pred, $cand, 'ガ');
-     my $select = &NTT::check_select_rest($pred, $cand, $case);
-    push @fe, $select if ($select);
- 
-
-    # 対数尤度比を用いた選択制限
-#     my $log = &check_log_like($pred, $cand, $case);    
-#     if ($log) {
-# 	for (my $i=1;$i<=$log;$i++) {
-# 	    push @fe, 'LOG_LIKE_'.$i;
-# 	}
-#     }
-
     # MI
     #my $score = &COOC::set_fe($cand, $pred, $case, 'MI');
     my %case_of = ( 'GA' => 'が', 'NI' => 'に', 'WO' => 'を' );
-    my $q = $cand->HEAD_WF.':'.$case_of{$case}.':'.$pred->PRED;
-    my $score = $ncvtool->get_score($q);
-    if ($score) {
-	if ($score > 0) {
-	    for (my $i=1;$i<=$score;$i++) {
-		push @fe, 'COOC_MI_PLUS'.$i;
-	    }
-	} else { # $score < 0
-	    for (my $i=-1;$i>=$score;$i--) {
-		push @fe, 'COOC_MI_MINUS'.$i;
+    if ($pred->PRED) {
+	my $q = $cand->HEAD_WF.':'.$case_of{$case}.':'.$pred->PRED;
+	my $score = $ncvtool->get_score($q);
+	if ($score) {
+	    if ($score > 0) {
+		$score = 5 if ($score > 5);
+		for (my $i=1;$i<=$score;$i++) {
+		    push @fe, 'COOC_MI_PLUS'.$i;
+		}
+	    } else { # $score < 0
+		$score = -5 if ($score < -5);
+		for (my $i=-1;$i>=$score;$i--) {
+		    push @fe, 'COOC_MI_MINUS'.$i;
+		}
 	    }
 	}
     }
-    # 括弧の情報やら，話者の情報やら
-
 
     if ($cand->sid != $pred->sid) {
 	# 前しか見に行ってないため．
@@ -933,7 +870,6 @@ sub ext_features_pair {
 
     my @FE = ();
     for my $f (@fe) {
-# 	print STDERR $f, "\n";
 	next unless ($f);
 	push @FE, '('.(split '\:', $f)[0].')';
     }
@@ -1010,7 +946,6 @@ sub ext_b_info_sub2 {
 sub ext_fe_sample_one {
     my $pred = shift; my $ant = shift; my $cl = shift; my $s = shift;
     my @b = @{$s->Bunsetsu}; my $b_num = @b;
-#     print STDERR 'ext_fe_sample_one', "\n";
     &mark_path($pred, $ant, $s);
     
 
