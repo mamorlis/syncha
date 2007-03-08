@@ -667,16 +667,16 @@ sub ext_candidates_including_dep {
     my @b = @{$s->Bunsetsu}; my $b_num = @b;
     my @c = ();
 
-#     my %except = ();
-#     for my $type ('GA', 'WO', 'NI') {
-# 	next unless ($pred->{$type});
-# 	my $c = $pred->{$type};
-# 	$except{$c->sid.':'.$c->bid} = 1;
-#     }
+    my %except = ();
+    for my $type ('GA', 'WO', 'NI') {
+	next unless ($pred->{$type});
+	my $c = $pred->{$type};
+	$except{$c->sid.':'.$c->bid} = 1;
+    }
 
     for (my $bid=0;$bid<$b_num;$bid++) {
 	next if ($b[$bid]->bid == $pred->bid); # 対象となる述語は除く
-# 	next if ($except{$b[$bid]->sid.':'.$b[$bid]->bid});
+ 	next if ($except{$b[$bid]->sid.':'.$b[$bid]->bid});
 	push @c, $b[$bid] if ($b[$bid]->NOUN);
     }
 
@@ -687,12 +687,12 @@ sub ext_inter_candidates {
     my $t = shift; my $pred = shift;
     return () if ($pred->sid == 0);
 
-#     my %except = ();
-#     for my $type ('GA', 'WO', 'NI') {
-# 	next unless ($pred->{$type});
-# 	my $c = $pred->{$type};
-# 	$except{$c->sid.':'.$c->bid} = 1;
-#     }
+    my %except = ();
+    for my $type ('GA', 'WO', 'NI') {
+	next unless ($pred->{$type});
+	my $c = $pred->{$type};
+	$except{$c->sid.':'.$c->bid} = 1;
+    }
 
     my @c = ();
     my @s = @{$t->Sentence}; my $s_num = @s;
@@ -700,7 +700,7 @@ sub ext_inter_candidates {
 	next if ($sid < 0);
 	my @b = @{$s[$sid]->Bunsetsu}; my $b_num = @b;
  	for (my $bid=0;$bid<$b_num;$bid++) {
-# 	    next if ($except{$b[$bid]->sid.':'.$b[$bid]->bid});
+ 	    next if ($except{$b[$bid]->sid.':'.$b[$bid]->bid});
  	    push @c, $b[$bid] if ($b[$bid]->NOUN);
 	}
     }
