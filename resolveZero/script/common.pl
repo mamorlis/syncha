@@ -677,6 +677,7 @@ sub ext_candidates_including_dep {
     for (my $bid=0;$bid<$b_num;$bid++) {
 	next if ($b[$bid]->bid == $pred->bid); # 対象となる述語は除く
  	next if ($except{$b[$bid]->sid.':'.$b[$bid]->bid});
+	next if ($b[$bid]->HEAD_BF eq 'ため');
 	push @c, $b[$bid] if ($b[$bid]->NOUN);
     }
 
