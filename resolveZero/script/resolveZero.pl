@@ -31,23 +31,7 @@ require 'openModFile.pl';
 require 'centerList.pl';
 require 'extractFeatures.pl';
 require 'cab.pl';
-
-use FindBin qw($Bin);
-my $v2type = $Bin.'/../../dict/db/v2type.db';
-my %db;
-{
-    no strict "subs";
-    if (eval "require BerkeleyDB; 1") {
-        tie %db, 'BerkeleyDB::Hash',
-            -Filename => $v2type,
-            -Flags    => DB_RDONLY,
-            -Mode     => 0444
-            or die "Cannot open $v2type:$!";
-    } elsif (eval "require DB_File; 1") {
-        tie %db, 'DB_File', $v2type, O_RDONLY, 0644
-            or die "Cannot open $v2type:$!";
-    }
-}
+require 'predictCasePattern.pl';
 
 my $rootPath = $scriptPath; $rootPath =~ s|[^/]+/$||;
 
@@ -120,20 +104,9 @@ sub resolve_zero {
             }
 	    if ($b->PRED) {
 		my $pred = $b;
-		my @type = ();
-		if ($db{$b->PRED}) {
-		    @type = split ' ', $db{$b->PRED};
-		} else {
-		    if ($b->HEAD_POS =~ /^Æ°»ì/) {
-			@type = ('GA', 'WO', 'NI');
-		    } else {
-			@type = ('GA');
-		    }
-		}
+ 		my @type = &predicat_case_pattern($pred);
 		for my $type (@type) {
-# 		    print STDERR 'intra ant', "\t", $type, "\n";
 		    my $intra_ant = &identify_antecedent_intra_bact($pred, $s, $type, $cl, $mRef->{intra}->{ant}->{$type});
-# 		    print STDERR 'intra ana', "\n";
 		    my $intra_score = 0;
 		    if ($intra_ant) {
 			$intra_score = &detemine_anaphoricity_intra_bact($s, $pred, $intra_ant, $type, $cl, $mRef->{intra}->{ana}->{$type});
@@ -141,9 +114,7 @@ sub resolve_zero {
 		    if ($intra_score > $intraParam{$type}) {
 			$pred->{$type} = $intra_ant;
 		    } else {
-# 			print STDERR 'inter ant', "\n";
 			my $inter_ant = &identify_antecedent_inter_bact($pred, $s, $t, $type, $cl, $mRef->{inter}->{ant}->{$type});
-# 			print STDERR 'inter ana', "\n";
 			my $inter_score = 0;
 			if ($inter_ant) {
 			    $inter_score = &detemine_anaphoricity_inter_bact($s, $pred, $inter_ant, $type, $cl, $mRef->{inter}->{ana}->{$type});

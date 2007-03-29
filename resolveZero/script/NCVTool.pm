@@ -32,10 +32,15 @@ sub new {
         type  => 'newswire',
         prob  => 'MI',
         model => 'n1000',
+        pat   => 'ncv',
         @_,
     );
     my $self  = {};
     bless $self, $class;
+
+    opendir 'DIR', $model_dir{$scorer_params{type}};
+    my @file = grep /$scorer_params{model}/, readdir DIR;
+    closedir DIR;
 
     my $model_path = $model_dir{$scorer_params{type}}.'/'.$scorer_params{model};
     my $model_prob = $scorer_params{prob};
@@ -45,6 +50,8 @@ sub new {
     }
     die "Cannot find models in $model_path" if ! -e $model_path.'.pz.da';
     my ($pid, $out, $in);
+    $scorer = 'scorer -u 2 -m Pos -p ' if ($scorer_params{pat} eq 'cv');
+
     $pid = open2 $out, $in, "$scorer $model_prob -d $model_path";
 
     $self->{pid} = $pid;
