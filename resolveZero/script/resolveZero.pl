@@ -95,13 +95,13 @@ sub resolve_zero {
 	my @b = @{$s->Bunsetsu}; my $b_num = @b;
 	for (my $bid=0;$bid<$b_num;$bid++) {
 	    my $b = $b[$bid];
-            for my $m (@{$b->Mor}) {
-                if ($m->EVENT) {
-                    # サ変だけだが……
-                    $b->PRED($m->WF.'する');
-                    $m->EVENT('');
-                }
-            }
+            #for my $m (@{$b->Mor}) {
+            #    if ($m->EVENT) {
+            #        # サ変だけだが……
+            #        $b->PRED($m->WF.'する');
+            #        $m->EVENT('');
+            #    }
+            #}
 	    if ($b->PRED) {
 		my $pred = $b;
  		my @type = &predicat_case_pattern($pred);

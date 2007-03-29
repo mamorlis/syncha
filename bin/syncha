@@ -59,18 +59,18 @@ chasen(1), mecab(1), cabocha(1)
 use strict;
 use warnings;
 
-our $VERSION = qw(1.2);
+our $VERSION = qw(1.6);
 
 use Carp qw(croak);
 use File::Temp qw(tempfile tempdir);
 use Getopt::Std;
 
 my $usage =<<"__USAGE__";
-USAGE: $0 [-a intraParam] [-e interParam] [-r chasenrc] [-hv123] [input-file(s)]
+USAGE: $0 [-a intraParam] [-e interParam] [-r chasenrc] [-hv1234] [input-file(s)]
 __USAGE__
 
 my %options;
-getopts("a:e:hvr:s:123", \%options);
+getopts("a:e:hvr:s:1234", \%options);
 die $usage if $options{h};
 print "Syncha version $VERSION\n" and exit 0 if $options{v};
 
@@ -78,6 +78,7 @@ use FindBin qw($Bin);
 chdir "$Bin/.." or croak "Cannot chdir to $Bin/..: $!";
 my $resolve_zero = 'resolveZero/script/resolveZero.pl';
 my $ena_tagger   = 'ena/bin/ena-tagger';
+my $mugicha      = 'mugicha/bin/classify_hier.pl';
 my $splitter     = 'bin/stc_splitter.pl';
 my $chasen       = 'chasen';
 my $chasen_flag  = $options{r} ? $options{r} : '-j';
@@ -99,33 +100,32 @@ while (<>) {
     if ($options{'2'}) {
         print $ena;
         exit 2;
+    } else {
+        chop $ena;
     }
 
-    my $fh = tempfile();
-    my $temp_file;
-    ($fh, $temp_file) = tempfile();
-    print $fh $ena;
-    close $fh;
+    my $mug_flag = "-b mugicha/data/ntc_train.svm.model -i ";
+    my $mug = `echo "$ena" | $mugicha $mug_flag` or croak "Cannot exec $mugicha:$!";
+    if ($options{'3'}) {
+        print $mug;
+        exit 3;
+    } else {
+        chop $mug;
+    }
 
     my $dir = tempdir( CLEANUP => 1, );
     system("cp resolveZero/models/{model,fe}_* $dir") == 0
         or croak "Cannot exec cp resolveZero/models/:$!";
     my $zero_flag = "-d $dir -a ${intra_param} -e ${inter_param}";
-    my $zero = `cat $temp_file | $resolve_zero $zero_flag`
+    my $zero = `echo "$mug" | $resolve_zero $zero_flag`
         or croak "Cannot exec $resolve_zero:$!";
-    unlink $temp_file;
-    if ($options{'3'}) {
+    if ($options{'4'}) {
         print $zero;
-        exit 3;
+        exit 4;
+    } else {
+        chop $zero;
     }
 
-    #$fh = tempfile();
-    #($fh, $temp_file) = tempfile();
-    #print $fh $zero;
-    #close $fh;
-
-    chomp $zero;
     my $result = `echo '$zero' | $fix_id` or croak "Cannot exec $fix_id:$!";
-    #my $result = `echo '$zero'` or croak "Cannot exec $fix_id:$!";
     print $result;
 }

@@ -1,0 +1,93 @@
+#!/usr/bin/env perl
+
+=head1 NAME
+
+MugiCha -- Morphological Unit and Group Interpreter using Co-occurrence and
+Hierarchical Analysis
+
+$Id$
+
+Copyright (C) 2005-2007 Mamoru KOMACHI <mamoru-k@is.naist.jp>
+
+=head1 SYNOPSIS
+
+mugicha-learn [-m svm/bact] -d mod_dir
+
+=head1 DESCRIPTION
+
+Mugicha-learn reads mod files and builds a binary classification model for
+argument labeling of event denoting nouns.
+
+=head1 OPTIONS
+
+=head2 -m
+
+Specifies which machine learning method it uses. Currently TinySVM (Support
+Vector Machines) and BACT (Boosting) are supported.
+
+=head2 -d
+
+Specifies the directory which contains mod files.
+
+=head1 REPORTING BUGS
+
+Please report any bugs you encounter through our website:
+
+B<http://syncha.sourcefprge.jp/>
+
+=head1 AUTHOR
+
+Mamoru KOMACHI <mamoru-k@is.naist.jp>
+
+=head1 SEE ALSO
+
+mugicha(1)
+
+=cut
+
+use strict;
+use warnings;
+
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+
+use File::Temp qw(tempfile);
+
+use Getopt::Std;
+my %options;
+getopts("d:hm:o:", \%options);
+
+my $usage = <<__USAGE__;
+USAGE: $0 [-m svm/bact] -d mod_dir -o model
+__USAGE__
+
+die $usage if $options{h};
+die $usage unless $options{d};
+die $usage unless $options{o};
+
+sub main {
+    my $fh = new File::Temp;
+    $fh = `./make_tournament.pl -i -d $options{d} 2>/dev/null`
+        or die "Cannot exec make_tournament.pl:$!\n";
+
+    if (defined $options{m} and $options{m} eq 'bact') {
+        # use bact format
+        my $train_file   = $fh->fname;
+        my $train_model  = $options{o}.'.bac';
+        my $train_bin    = $options{o}.'.bin';
+        my $train_da     = $options{o}.'.bin.O';
+        my @bact_learn   = qw(bact_learn -T 3000 -m 5 -L 4
+                              $train_file $train_model);
+        my @bact_mkmodel = qw(bact_mkmodel -i $train_model -o $train_bin -O $train_da)
+        system @bact_learn;
+        system @bact_mkmodel;
+    } else {
+        my $svm_fh = new File::Temp;
+    }
+    # output
+    open my $model_fh, '>', $options{o} or die "Cannot open $options{o}:$!\n";
+    print $model_fh $fh;
+    close $model_fh;
+}
+
+main();

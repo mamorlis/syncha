@@ -2191,8 +2191,6 @@ sub puts_mod {
 	if ($self->head eq $i) {
 	    if  ($self->PRED_FLAG) {
 		$out .= (@event_args)? ' TYPE:pred' : "\tTYPE:pred";
-	    } elsif ($self->EVENT) {
-		$out .= (@event_args)? ' TYPE:event' : "\tTYPE:event";
 	    }
 	}
 
