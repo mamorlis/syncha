@@ -10,7 +10,7 @@ ENA - Event Noun Annotation
 
 #use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
 
-our $VERSION = "1.3";
+our $VERSION = "1.4";
 
 @ISA       = qw(Exporter);
 @EXPORT    = qw(annotate get_db_dir get_gdbm_dir get_tools_dir
@@ -23,11 +23,9 @@ my $DEBUG = 0;
 # Import environment variables
 use ENA::Conf;
 use ENA::PLSI;
-use ENA::EDR;
 use ENA::Bgh;
 
 my $plsi = new ENA::PLSI;
-my $edr  = new ENA::EDR;
 my $bgh  = new ENA::Bgh;
 
 use strict;
@@ -55,7 +53,6 @@ require 'mod.pm';
 
 my $sem_offset = 50000;
 my $syn_offset = 60000;
-my $edr_offset = 70000;
 
 # 素性を一意にするため
 my $morph_id = 0;
@@ -105,17 +102,6 @@ sub set_feature {
 
         carp "FEATURE_KEY: ", $key if $DEBUG and $key ne 'morph_id';
         my $threshold = 1.0;   # 1.0 以下はそれっぽくない
-
-        if ($key =~ m/^edr_sem_([^_]*)$/xms) {
-            $sem_role{$1} ||= scalar keys %sem_role;
-            carp "SEM_ROLE: ", $sem_role{$1}, $1 if $DEBUG;
-
-            if ($feature{$key} > $threshold) {
-                $feature_list{$sem_role{$1} + $edr_offset}++;
-                $feature_name{$sem_role{$1} + $edr_offset}
-                    = "SEM_ROLE_".$1;
-            }
-        }
 
         if ($key =~ m/^sem_(.*)$/xms) {
             my $attribute = $1;
@@ -174,17 +160,6 @@ sub set_feature {
         foreach my $key (keys %feature) {
             if ($key =~ m/^(.*_word_form)$/xms) {
                 $feature_of{get_morph_id()} .=  uc "$1:". $feature{$1}. q{,};
-            }
-            elsif ($key =~ m/^(edr_sem_([^_]*))$/xms) {
-                my $sem_feature      = $1;
-                my $sem_feature_word = $sem_feature . '_word';
-                my $sem_role         = uc $2;
-                if ($feature{"$sem_feature"}) {
-                    $feature_of{get_morph_id()} .= "SEM_${sem_role}:".
-                        $feature{"$sem_feature"}. q{,};
-                    $feature_of{get_morph_id()} .=  "SEM_${sem_role}_WORD:".
-                        $feature{"$sem_feature_word"}->{WF}. q{,};
-                }
             }
             elsif ($key =~ m/^(case_(.*))$/xms) {
                 my $case_feature = $1;
@@ -284,9 +259,8 @@ sub make_train_data {
                 # サ変名詞が見つかった
                 carp 'SAHEN: ', $morph->get_surface if $DEBUG;
 
-                # 分類語彙表と EDR を見る
+                # 分類語彙表を見る
                 my $bgh_id  = $bgh->get_class_id_frac($morph->get_surface);
-                my %edr_pat = $edr->get_pattern($morph->get_surface);
 
                 carp "BGH: $bgh_id, WF: ", $morph->get_surface if $DEBUG;
 
@@ -295,7 +269,6 @@ sub make_train_data {
                 $feature{segment_word_form} = $word_form;
                 $feature{morph_word_form}   = $morph->get_surface;
                 $feature{bgh_id}    = $bgh_id;
-                $feature{edr_pat}   = \%edr_pat;
                 
                 # 文節の素性
                 $feature{syn_morphs_pos}      = $syn_morphs_pos;
@@ -419,7 +392,6 @@ sub make_train_data {
             $feature{morph_id} = get_morph_id;
 
             # 名詞の意味素性を追加
-            add_noun_feature($noun_list_ref, \%feature);
             set_feature(\%feature);
 
             # 分類語彙表にあるものだけ対象にする
@@ -430,85 +402,6 @@ sub make_train_data {
             inc_morph_id();
         }
     }
-}
-
-sub add_noun_feature {
-    my ($noun_ref, $feature_ref) = @_;
-    my $edr_pat = $feature_ref->{edr_pat};
-    carp 'EDR_PAT: ', $feature_ref->{head_word_form},
-        Dumper(%$edr_pat) if $DEBUG;
-
-    # 格がなければなにもしない
-    return if !$edr_pat;
-
-    # 表を作る
-    my %concept_id_of;
-    my %concept_morph_of;
-    my %concept_position_of;
-    my @noun_list = @{ $noun_ref };
-    for (my $i = 0; $i < scalar @noun_list; $i++) {
-        my $noun = $noun_list[$i];
-        my $concept_id = $edr->get_concept_id($noun->get_surface);
-        $concept_id_of{$noun}               = $concept_id;
-        $concept_morph_of{"$concept_id"}    = $noun;
-
-        # (1) 最後のもの(一番近い)だけ覚える
-        # (2) 番号が一つずつずれている
-        $concept_position_of{"$concept_id"} = $i + 1;
-    }
-
-    my $case = $edr_pat;
-    #foreach my $case (keys %$edr_pat) {
-        foreach my $sem_role (keys %{ $case }) {
-            print STDERR "CASE: $sem_role = $case->{$sem_role}\n" if $DEBUG;
-
-            # 格要素に関する意味的制約
-            my @concepts_id = split /;/, $case->{$sem_role};
-            foreach my $concept_id (@concepts_id) {
-                my $concept_id = substr $concept_id, 0, 6;
-                print STDERR "CONCEPT_ID: $concept_id\n" if $DEBUG;
-
-                # 出現する名詞について意味的制約を満たしているものがある
-                # FIXME: 計算をキャッシュして高速化
-                foreach my $noun_id (values %concept_id_of) {
-                    my $similarity = $edr->is_under_class($noun_id, $concept_id);
-                    my $verb = $feature_ref->{head_word_form};
-
-                    my $sem_feature      = "edr_sem_$sem_role";
-                    my $sem_feature_word = $sem_feature . "_word";
-                    my $concept          = $concept_morph_of{$noun_id};
-
-                    # スコアは意味的制約が合っていれば高く
-                    # 遠くなれば低く出るようになっていてほしい
-                    my $distance = abs($feature_ref->{noun_id}
-                                       - $concept_position_of{"$noun_id"});
-                    my $cooc = $plsi->calc_mi($concept, $verb."する");
-
-                    print STDERR
-                         "DISTANCE:",
-                         $feature_ref->{noun_id}, q{,},
-                         $concept_position_of{"$noun_id"}, q{,},
-                         $distance, qq{\n},
-                         "SIMILARITY($sem_role,$concept->{WF}):",
-                         $similarity,
-                         ", COOCURRENCE($concept->{WF}, $verb):",
-                         $cooc, "\n" if $DEBUG;
-
-                    my $score = $distance
-                              ? $similarity / log ($distance + 1)
-                              : 0;
-
-                    ## それまでに出たもっとも高い類似度のものを記憶
-                    #$feature_ref->{"$sem_feature"}       ||= $score;
-                    #$feature_ref->{"$sem_feature_word"}  ||= $concept;
-                    #if ($score > $feature_ref->{"$sem_feature"}) {
-                    #    $feature_ref->{"$sem_feature"}      = $score;
-                    #    $feature_ref->{"$sem_feature_word"} = $concept;
-                    #}
-                }
-            }
-        }
-    #}
 }
 
 1;

@@ -11,11 +11,9 @@ use strict;
 use warnings;
 
 use ENA::Conf;
-use ENA::EDR;
 use ENA::Pronoun;
 use ENA::Rengo;
 
-my $ena_edr     = new ENA::EDR;
 my $ena_pronoun = new ENA::Pronoun;
 my $ena_rengo   = new ENA::Rengo;
 
@@ -1004,24 +1002,6 @@ sub PRE_DEFINITE {
         $self->{PRE_DEFINITE} = $_[0];
     } else {
         return $self->{PRE_DEFINITE};
-    }
-}
-
-sub EDR_PERSON {
-    my $self = shift; $self->KEYS('EDR_PERSON');
-    if (@_) {
-        $self->{EDR_PERSON} = $_[0];
-    } else {
-        return $self->{EDR_PERSON};
-    }
-}
-
-sub EDR_ORG {
-    my $self = shift; $self->KEYS('EDR_ORG');
-    if (@_) {
-        $self->{EDR_ORG} = $_[0];
-    } else {
-        return $self->{EDR_ORG};
     }
 }
 
@@ -2168,8 +2148,6 @@ sub is_zero {
 #     $copy->STRING($self->WF.$case->WF);
 #     $copy->DEFINITE($self->DEFINITE);
 #     $copy->PRE_DEFINITE($self->PRE_DEFINITE);
-#     $copy->EDR_PERSON($self->EDR_PERSON);
-#     $copy->EDR_ORG($self->EDR_ORG);
 #     $copy->ANIMACY($self->ANIMACY);
 #     $copy->PRONOUN_TYPE($self->PRONOUN_TYPE);
 #     $copy->SENT_INDEX($ana->SENT_INDEX);
@@ -2220,8 +2198,6 @@ sub copy2 {
     $copy->STRING($self->STRING);
     $copy->DEFINITE($self->DEFINITE);
     $copy->PRE_DEFINITE($self->PRE_DEFINITE);
-    $copy->EDR_PERSON($self->EDR_PERSON);
-    $copy->EDR_ORG($self->EDR_ORG);
     $copy->ANIMACY($self->ANIMACY);
     $copy->PRONOUN_TYPE($self->PRONOUN_TYPE);
     $copy->HEAD_POS($self->HEAD_POS);
@@ -2361,8 +2337,6 @@ sub new {
         $cab[$i]->ZERO(&check_zero($cab[$i]));
         $cab[$i]->DEFINITE(&ext_definite($cab[$i]));
         $cab[$i]->PRE_DEFINITE(&ext_pre_definite($cab[$i], @cab));      
-        $cab[$i]->EDR_PERSON($ena_edr->check_edr_person($cab[$i]));
-        $cab[$i]->EDR_ORG($ena_edr->check_edr_org($cab[$i]));
         $cab[$i]->ANIMACY(&check_animacy($cab[$i]));
         $cab[$i]->PRONOUN_TYPE($ena_pronoun->check_pronoun_type($cab[$i]));
         $cab[$i]->descendant(&ext_descendant($i, @cab));
@@ -2835,8 +2809,7 @@ sub ext_pre_definite {
 sub check_animacy {
     my $b = shift;
     return unless ($b->HEAD_NE);
-    return ($b->EDR_PERSON or $b->EDR_ORG or
-            $b->HEAD_NE =~ /(?:PERSON|ORGANIZATION)/)? 'ANIMACY' : '';
+    return ($b->HEAD_NE =~ /(?:PERSON|ORGANIZATION)/)? 'ANIMACY' : '';
 }
 
 sub ext_conj_val {
