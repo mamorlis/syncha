@@ -697,7 +697,8 @@ sub ext_inter_candidates {
 
     my @c = ();
     my @s = @{$t->Sentence}; my $s_num = @s;
-    for (my $sid=$pred->sid-1;$sid<$pred->sid;$sid++) {
+#     for (my $sid=$pred->sid-1;$sid<$pred->sid;$sid++) {
+    for (my $sid=0;$sid<$pred->sid;$sid++) {
 	next if ($sid < 0);
 	my @b = @{$s[$sid]->Bunsetsu}; my $b_num = @b;
  	for (my $bid=0;$bid<$b_num;$bid++) {
