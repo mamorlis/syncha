@@ -702,6 +702,7 @@ sub ext_inter_candidates {
 	my @b = @{$s[$sid]->Bunsetsu}; my $b_num = @b;
  	for (my $bid=0;$bid<$b_num;$bid++) {
  	    next if ($except{$b[$bid]->sid.':'.$b[$bid]->bid});
+	    next if ($b[$bid]->HEAD_BF eq 'д┐дс');
  	    push @c, $b[$bid] if ($b[$bid]->NOUN);
 	}
     }
