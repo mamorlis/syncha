@@ -24,16 +24,17 @@ BEGIN {
     }
 }
 
-our $db_path = $ENV{HOME}.'/repos/trunk/syncha/dict/db/';
-our %dict_of = ( N2C  => 'NTT_N2C.db',
-                 v2c  => 'NTT_v2c.db',
+use FindBin qw($Bin);
+our $db_path = $Bin.'../../dict/db/';
+our %dict_of = ( #N2C  => 'NTT_N2C.db',
+                 #v2c  => 'NTT_v2c.db',
                  path => 'path.db',
-                 ga   => 'ga_vframe.db',
-                 wo   => 'wo_vframe.db',
-                 ni   => 'ni_vframe.db',
+                 #ga   => 'ga_vframe.db',
+                 #wo   => 'wo_vframe.db',
+                 #ni   => 'ni_vframe.db',
                  pron => 'pronoun.db',
-                 hum  => 'edr_person.db',
-                 org  => 'edr_org.db',
+                 #hum  => 'edr_person.db',
+                 #org  => 'edr_org.db',
 );
 our %db_of;
 our %sem_of = ( ORGANIZATION => 'g0362_ах©╔',
