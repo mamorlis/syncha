@@ -16,7 +16,7 @@ use warnings;
 
 package Semantics;
 
-our $VERSION = '0.0.2';
+our $VERSION = '0.1';
 
 BEGIN {
     unless (eval "use BerkeleyDB; 1") {
@@ -28,7 +28,7 @@ use FindBin qw($Bin);
 our $db_path = $Bin.'../../dict/db/';
 our %dict_of = ( #N2C  => 'NTT_N2C.db',
                  #v2c  => 'NTT_v2c.db',
-                 path => 'path.db',
+                 #path => 'path.db',
                  #ga   => 'ga_vframe.db',
                  #wo   => 'wo_vframe.db',
                  #ni   => 'ni_vframe.db',
