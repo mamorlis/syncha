@@ -119,10 +119,10 @@ sub make_semantic_features {
         and (my @cooc_features = $cooc->get_cooc_features($vframe, $morph))) {
         push @semantic_features, @cooc_features;
     }
-    if (!$self->has_feature('webcooc')
-        and (my @cooc_features = $webcooc->get_cooc_features($vframe, $morph))) {
-        push @semantic_features, map { 'WEB_'.$_ } @cooc_features;
-    }
+    #if (!$self->has_feature('webcooc')
+    #    and (my @cooc_features = $webcooc->get_cooc_features($vframe, $morph))) {
+    #    push @semantic_features, map { 'WEB_'.$_ } @cooc_features;
+    #}
     #if (!$self->has_feature('tycooc')
     #    and (my @cooc_features = $tycooc->get_cooc_features($vframe, $morph))) {
     #    push @semantic_features, map { 'TY_'.$_ } @cooc_features;
@@ -326,10 +326,10 @@ sub make_pair_features {
         and (my @cooc_features = $cooc->cmp_cooc_features($vframe, $left, $right))) {
         push @pair_features, @cooc_features;
     }
-    if (!$self->has_feature('webcooc')
-        and (my @cooc_features = $webcooc->cmp_cooc_features($vframe, $left, $right))) {
-        push @pair_features, map { 'WEB_'.$_ } @cooc_features;
-    }
+    #if (!$self->has_feature('webcooc')
+    #    and (my @cooc_features = $webcooc->cmp_cooc_features($vframe, $left, $right))) {
+    #    push @pair_features, map { 'WEB_'.$_ } @cooc_features;
+    #}
     #if (!$self->has_feature('tycooc')
     #    and (my @cooc_features = $tycooc->cmp_cooc_features($vframe, $left, $right))) {
     #    push @pair_features, map { 'TY_'.$_ } @cooc_features;
