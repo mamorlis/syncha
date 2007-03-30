@@ -96,7 +96,8 @@ while (<>) {
         exit 1;
     }
 
-    my $ena = `echo "$cab" | $ena_tagger` or croak "Cannot exec $ena_tagger:$!";
+    my $ena_flag = "-t tinysvm";
+    my $ena = `echo "$cab" | $ena_tagger $ena_flag` or croak "Cannot exec $ena_tagger:$!";
     if ($options{'2'}) {
         print $ena;
         exit 2;
@@ -104,7 +105,7 @@ while (<>) {
         chop $ena;
     }
 
-    my $mug_flag = "-b mugicha/data/ntc_train.svm.model -i ";
+    my $mug_flag = "-f webcooc -b mugicha/data/ntc_train.svm.model -i ";
     my $mug = `echo "$ena" | $mugicha $mug_flag` or croak "Cannot exec $mugicha:$!";
     if ($options{'3'}) {
         print $mug;
