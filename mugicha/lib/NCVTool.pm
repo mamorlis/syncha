@@ -15,7 +15,7 @@ use Carp;
 
 use FindBin qw($Bin);
 my %model_dir = ( 'newswire' => $Bin."/../../dict/cooc",
-                  'web'      => "/work/mamoru-k/kawahara/threshold300",
+                  'web'      => $Bin."/../../dict/cooc",
 );
 my $scorer    = 'scorer -u 3 -m Pos -p ';
 
