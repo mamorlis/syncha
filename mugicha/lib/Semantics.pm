@@ -25,7 +25,7 @@ BEGIN {
 }
 
 use FindBin qw($Bin);
-our $db_path = $Bin.'../../dict/db/';
+our $db_path = $Bin.'/../../dict/db/';
 our %dict_of = ( #N2C  => 'NTT_N2C.db',
                  #v2c  => 'NTT_v2c.db',
                  #path => 'path.db',

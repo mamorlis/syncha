@@ -28,7 +28,7 @@ use Carp qw(carp croak);
 use Data::Dumper;
 
 use FindBin qw($Bin);
-our $db_path = $Bin.'../../dict/db/';
+our $db_path = $Bin.'/../../dict/db/';
 our %dict_of = ( functional => 'functional.db',
                  func_verbs => 'func_verbs.db',
                  ealign     => 'ealign.db',

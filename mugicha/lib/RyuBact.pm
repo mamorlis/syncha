@@ -18,13 +18,13 @@ use warnings;
 package RyuBact;
 
 use MyBact;
-use Semantics::NTT;
-use Semantics::EDR;
+#use Semantics::NTT;
+#use Semantics::EDR;
 use Semantics::NE;
 use Semantics::Pronoun;
 use Semantics::Cooc;
-my $ntt     = new Semantics::NTT;
-my $edr     = new Semantics::EDR;
+#my $ntt     = new Semantics::NTT;
+#my $edr     = new Semantics::EDR;
 my $ne      = new Semantics::NE;
 my $pronoun = new Semantics::Pronoun;
 my $cooc    = new Semantics::Cooc (type => 'newswire', model => 'n1000');
@@ -98,10 +98,10 @@ sub make_semantic_features {
     #carp Dumper($morph);
 
     my @semantic_features;
-    if (!$self->has_feature('ntt')
-        and (my $ntt_sem = $ntt->get_sem_class($morph))) {
-        push @semantic_features, $ntt_sem;
-    }
+    #if (!$self->has_feature('ntt')
+    #    and (my $ntt_sem = $ntt->get_sem_class($morph))) {
+    #    push @semantic_features, $ntt_sem;
+    #}
     # EDR seems harmful for our task. 2007/01/28
     #if (!$self->has_feature('edr')
     #    and (my $edr_type = $edr->get_edr_type($morph))) {
@@ -213,17 +213,17 @@ sub make_verb_features {
     #}
 
     # Semantic information
-    unless ($self->has_feature('ntt')) {
-        if (my $sem_class = $ntt->get_verb_class($en)) {
-            push @verb_features, $sem_class;
-        }
-        if (my $sel_res = $ntt->get_selectional_restriction($vframe, $en, $arg)) {
-            push @verb_features, 'L_'.$sel_res;
-        }
-        if (my $sel_res = $ntt->get_selectional_restriction($vframe, $en, $np)) {
-            push @verb_features, 'R_'.$sel_res;
-        }
-    }
+    #unless ($self->has_feature('ntt')) {
+    #    if (my $sem_class = $ntt->get_verb_class($en)) {
+    #        push @verb_features, $sem_class;
+    #    }
+    #    if (my $sel_res = $ntt->get_selectional_restriction($vframe, $en, $arg)) {
+    #        push @verb_features, 'L_'.$sel_res;
+    #    }
+    #    if (my $sel_res = $ntt->get_selectional_restriction($vframe, $en, $np)) {
+    #        push @verb_features, 'R_'.$sel_res;
+    #    }
+    #}
 
     return @verb_features;
 }
