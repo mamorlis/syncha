@@ -28,7 +28,7 @@ my $edr     = new Semantics::EDR;
 my $ne      = new Semantics::NE;
 my $pronoun = new Semantics::Pronoun;
 my $cooc    = new Semantics::Cooc (type => 'newswire', model => 'n1000');
-my $webcooc = new Semantics::Cooc (type => 'web', model => 'web-n4000');
+#my $webcooc = new Semantics::Cooc (type => 'web', model => 'web-n4000');
 #my $tycooc  = new Semantics::Cooc (type => 'newswire', model => 'ty-n1000');
 
 use Syntax;
