@@ -2183,7 +2183,7 @@ sub puts_mod {
         for my $type ('GA', 'WO', 'NI') {
             if (ref($self->{$type}) eq 'Bunsetsu' and $self->head eq $i) {
                 my $b = $self->{$type};
-                push @event_args, $type.'='.$b->sid.':'.$b->bid;
+                push @event_args, $type.'='.$b->sid.':'.$b->bid.':'.$b->head;
             }
         }
         $out .= "\tEVENT:".join(q{,}, @event_args) if @event_args;

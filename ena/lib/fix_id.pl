@@ -32,11 +32,12 @@ for my $text (@{ $cab->get_text }) {
     }
 }
 
-# WO:0:3 から一意の ID のハッシュを作る
-# (形式は CASE:TEXT_ID:CHUNK_ID)
+# WO:0:3:1 から一意の ID のハッシュを作る
+# (形式は CASE:TEXT_ID:CHUNK_ID:MORH_ID)
 # CASE     => (GA|WO|NI)
 # TEXT_ID  => numeric
 # CHUNK_ID => numeric
+# MORPH_ID => numeric
 for my $id (sort @ids) {
     $id_of{$id} = $new_id;
     $new_id++;
@@ -45,13 +46,11 @@ for my $id (sort @ids) {
 #carp Dumper %id_of;
 
 for my $id (keys %id_of) {
-    my ($tid, $cid) = split /:/, $id;
+    my ($tid, $cid, $mid) = split /:/, $id;
     for my $text (@{ $cab->get_text }) {
         if ($tid eq $text->get_id) {
             for my $chunk (@{ $text->get_chunk }) {
                 if ($cid eq $chunk->get_id) {
-                    # head となる形態素につける
-                    my $mid = (split q{/}, $chunk->get_head_func)[0];
                     for my $morph (@{ $chunk->get_morph }) {
                         if ($mid eq $morph->get_id) {
                             my $relation = $morph->get_relation;
