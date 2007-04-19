@@ -50,7 +50,7 @@ my %marker = ( 'ga' => 'が', 'o' => 'を', 'ni' => 'に',
                'が' => 'ga', 'を' => 'o', 'に' => 'ni',
                'GA' => 'が', 'WO' => 'を', 'NI' => 'に', );
 
-my $pred_type = $opt_t || 'EVENT';
+my $pred_type = $opt_t || 'event';
 
 sub main {
     my $cab = new MyCabocha (*STDIN);
@@ -133,7 +133,7 @@ sub classify_hier {
                       : '';
                     my $vframe = ':'.$marker{$case}
                                 .':'.$morph->get_read;
-                    $vframe .= 'する' if $pred_type eq 'EVENT';
+                    $vframe .= 'する' if $pred_type eq 'event';
 
                     if (my $pred = $morph->get_depend) {
                         my $verb_head = $pred->get_head;
@@ -271,7 +271,7 @@ sub set_event_arg {
     my $event_str;
     my $arg_id = $arg->get_text_id.':'.$arg->get_chunk_id.':'.$arg->get_id;
     my %marker = ( 'が' => 'GA', 'を' => 'WO', 'に' => 'NI' );
-    if ($event->get_relation !~ 'EVENT:') {
+    if ($event->get_type eq 'event') {
         $event_str = 'TYPE:event EVENT:'.$marker{$case}.'='.$arg_id;
     } else {
         $event_str = $event->get_relation.','.$marker{$case}.'='.$arg_id;

@@ -1279,10 +1279,8 @@ sub set_type {
     my $self = shift;
 
     my $type;
-    if ($type = ($self->get_argstr =~ m/(EVENT|PRED)/gmx)[0]) {
+    if ($type = ($self->get_relation =~ m/TYPE:(event|pred)/gmx)[0]) {
         $self->{type} = $type;
-    } elsif ($type = ($self->get_argstr =~ m/(event|pred)/gmx)[0]) {
-        $self->{type} = uc $type;
     } else {
         $self->{type} = '';
     }

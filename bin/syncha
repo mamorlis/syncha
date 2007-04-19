@@ -81,7 +81,7 @@ my $ena_tagger   = 'ena/bin/ena-tagger';
 my $mugicha      = 'mugicha/bin/classify_hier.pl';
 my $splitter     = 'bin/stc_splitter.pl';
 my $chasen       = 'chasen';
-my $chasen_flag  = $options{r} ? $options{r} : '-j';
+my $chasen_flag  = $options{r} || '';
 my $cabocha      = 'cabocha';
 my $fix_id       = 'ena/lib/fix_id.pl';
 my $intra_param  = $options{a} || 0;
@@ -89,44 +89,44 @@ my $inter_param  = $options{e} || 0;
 
 local $/ = undef;
 while (<>) {
-    my $cab = `echo "$_" | $splitter | $chasen $chasen_flag | $cabocha -I1 -f1`
+    my $cab = `echo "$_" | sed -e "/^\$/d" | $splitter | $chasen $chasen_flag | $cabocha -I1 -f1`
         or croak "Cannot exec $cabocha:$!";
     if ($options{'1'}) {
         print $cab;
         exit 1;
     }
 
-    my $ena_flag = "-t tinysvm";
-    my $ena = `echo "$cab" | $ena_tagger $ena_flag` or croak "Cannot exec $ena_tagger:$!";
+    my $dir = tempdir( CLEANUP => 1, );
+    system("cp resolveZero/models/{model,fe}_* $dir") == 0
+        or croak "Cannot exec cp resolveZero/models/:$!";
+    my $zero_flag = "-d $dir -a ${intra_param} -e ${inter_param}";
+    my $zero = `echo "$cab" | $resolve_zero $zero_flag`
+        or croak "Cannot exec $resolve_zero:$!";
     if ($options{'2'}) {
-        print $ena;
+        print $zero;
         exit 2;
+    } else {
+        chop $zero;
+    }
+
+    my $ena_flag = "-t tinysvm";
+    my $ena = `echo "$zero" | $ena_tagger $ena_flag` or croak "Cannot exec $ena_tagger:$!";
+    if ($options{'3'}) {
+        print $ena;
+        exit 3;
     } else {
         chop $ena;
     }
 
     my $mug_flag = "-f webcooc -b mugicha/data/ntc_train.svm.model -i ";
     my $mug = `echo "$ena" | $mugicha $mug_flag` or croak "Cannot exec $mugicha:$!";
-    if ($options{'3'}) {
+    if ($options{'4'}) {
         print $mug;
-        exit 3;
+        exit 4;
     } else {
         chop $mug;
     }
 
-    my $dir = tempdir( CLEANUP => 1, );
-    system("cp resolveZero/models/{model,fe}_* $dir") == 0
-        or croak "Cannot exec cp resolveZero/models/:$!";
-    my $zero_flag = "-d $dir -a ${intra_param} -e ${inter_param}";
-    my $zero = `echo "$mug" | $resolve_zero $zero_flag`
-        or croak "Cannot exec $resolve_zero:$!";
-    if ($options{'4'}) {
-        print $zero;
-        exit 4;
-    } else {
-        chop $zero;
-    }
-
-    my $result = `echo '$zero' | $fix_id` or croak "Cannot exec $fix_id:$!";
+    my $result = `echo '$mug' | $fix_id` or croak "Cannot exec $fix_id:$!";
     print $result;
 }

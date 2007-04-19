@@ -994,7 +994,7 @@ sub get_text_id {
 sub puts {
     my $self = shift;
 
-    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
         $self->get_surface,
         $self->get_base,
         $self->get_read,
@@ -1002,7 +1002,8 @@ sub puts {
         $self->get_ctype,
         $self->get_cform,
         $self->get_ne,
-        $self->get_relation;
+        $self->get_relation,
+        $self->get_argstr;
 }
 
 =item * set_id
@@ -1262,7 +1263,7 @@ sub get_argstr {
 sub set_type {
     my $self = shift;
 
-    if (my $type = ($self->get_argstr =~ m/(EVENT|PRED)/gmx)[0]) {
+    if (my $type = ($self->get_relation =~ m/(event|pred)/gmx)[0]) {
         $self->{type} = $type;
     } else {
         $self->{type} = '';

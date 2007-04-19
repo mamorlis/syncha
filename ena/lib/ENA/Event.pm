@@ -105,8 +105,9 @@ sub new {
             for my $morph (@{ $chunk->get_morph }) {
                 if (defined $score_of{$morph_id} and $score_of{$morph_id} > 0
                     or defined $morph->next and ${$morph->next}->get_pos !~ m/^Æ°»ì/gmx
-                    and $self->unamb($morph->get_surface)) {
-                    $morph->set_relation($morph->get_relation.' EVENT');
+                    and $self->unamb($morph->get_surface)
+                    and $morph->get_type ne 'pred') {
+                    $morph->set_relation($morph->get_relation.' TYPE:event');
                 }
                 $morph_id++;
             }

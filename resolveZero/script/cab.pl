@@ -81,7 +81,9 @@ sub open_cab_file_from_stdin {
     {
 	local $/ = "EOS\n";
 	while (<>) {
-	    chomp; push @s, Sentence->new($_);
+	    chomp;
+	    next if /^$/;
+        push @s, Sentence->new($_);
 	}
     }
 

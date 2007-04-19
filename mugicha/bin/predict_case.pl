@@ -11,7 +11,7 @@ my $ncvtool = new NCVTool(model=>'n50', pat=>'cv');
 sub predict_case {
     my $morph = shift; # Morph
     my @type;
-    if ($morph->get_type eq 'EVENT') {
+    if ($morph->get_type eq 'event') {
         my %case = ( 'が' => 'GA', 'を'=>'WO', 'に'=>'NI' );
         for my $case (keys %case) {
             my $q = $case.':'.$morph->get_surface.'する';
