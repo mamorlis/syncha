@@ -368,6 +368,25 @@ sub get_np {
     return \@nps;
 }
 
+=item * get_head_np
+
+=cut
+
+sub get_head_np {
+    my $self = shift;
+    
+    my @nps;
+
+    for my $chunk (@{ $self->get_chunk }) {
+        my $head = $chunk->get_head;
+        if ($head->get_pos =~ m/^Ì¾»ì/gmx) {
+            push @nps, $head;
+        }
+    }
+
+    return \@nps;
+}
+
 =item * get_chunk_by_id
 
 =cut

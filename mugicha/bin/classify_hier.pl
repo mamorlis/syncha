@@ -210,7 +210,7 @@ sub tournament {
     my @context_nps;
     for my $context (@{ $cab->get_text }) {
         if ($context->get_id < $text->get_id) {
-            push @context_nps, @{ $context->get_np };
+            push @context_nps, @{ $context->get_head_np };
         }
     }
     if (@nps <= 1) {
@@ -269,12 +269,17 @@ sub tournament {
             set_event_arg($morph, $vframe, $winner);
         } else {
             # 文間にあるかもしれず
+            my $best_score = 0;
+            my $best_cand;
             for my $cand (@context_nps) {
                 my $q = $cand->get_surface.$vframe;
-                if ($ncvtool->get_score($q) > 0) {
-                    set_event_arg($morph, $vframe, $cand);
+                my $cand_score = $ncvtool->get_score($q);
+                if ($cand_score > $best_score) {
+                    $best_score = $cand_score;
+                    $best_cand  = $cand;
                 }
             }
+            set_event_arg($morph, $vframe, $best_cand) if $best_cand;
         }
         #print STDERR XMLout($tournament->xml, RootName => 'Tournament');
     }

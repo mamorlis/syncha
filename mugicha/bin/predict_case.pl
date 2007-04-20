@@ -12,7 +12,7 @@ sub predict_case {
     my $morph = shift; # Morph
     my @type = ('GA');
     if ($morph->get_type eq 'event') {
-        my %case = ( 'が' => 'GA', 'を'=>'WO', 'に'=>'NI' );
+        my %case = ( 'を'=>'WO', 'に'=>'NI' );
         for my $case (keys %case) {
             my $q = $case.':'.$morph->get_surface.'する';
             my $score = $ncvtool->get_score($q);

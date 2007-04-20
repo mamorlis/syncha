@@ -59,7 +59,7 @@ chasen(1), mecab(1), cabocha(1)
 use strict;
 use warnings;
 
-our $VERSION = qw(1.7);
+our $VERSION = qw(1.8);
 
 use Carp qw(croak);
 use File::Temp qw(tempfile tempdir);
