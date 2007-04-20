@@ -11,6 +11,7 @@ use lib "$Bin/../bin";
 
 use MyCabocha;
 use NCVTool;
+my $ncvtool = new NCVTool;
 
 use English;
 local $LIST_SEPARATOR = '';
@@ -267,14 +268,17 @@ sub tournament {
 
 sub set_event_arg {
     my ($event, $vframe, $arg) = @_;
+    return if ($ncvtool->get_score($arg->get_surface.$vframe) < 0);
     my $case = (split q[:], $vframe)[1];
-    my $event_str;
     my $arg_id = $arg->get_text_id.':'.$arg->get_chunk_id.':'.$arg->get_id;
     my %marker = ( '¤¬' => 'GA', '¤ò' => 'WO', '¤Ë' => 'NI' );
+    my $event_str = $event->get_relation;
     if ($event->get_type eq 'event') {
-        $event_str = 'TYPE:event EVENT:'.$marker{$case}.'='.$arg_id;
-    } else {
-        $event_str = $event->get_relation.','.$marker{$case}.'='.$arg_id;
+        if ($event->get_relation =~ m/EVENT:/gmx) {
+            $event_str = $event->get_relation.','.$marker{$case}.'='.$arg_id;
+        } else {
+            $event_str = 'TYPE:event EVENT:'.$marker{$case}.'='.$arg_id;
+        }
     }
     $event->set_relation($event_str);
 }

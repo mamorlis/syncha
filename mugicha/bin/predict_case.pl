@@ -10,7 +10,7 @@ my $ncvtool = new NCVTool(model=>'n50', pat=>'cv');
 
 sub predict_case {
     my $morph = shift; # Morph
-    my @type;
+    my @type = ('GA');
     if ($morph->get_type eq 'event') {
         my %case = ( '¤¬' => 'GA', '¤ò'=>'WO', '¤Ë'=>'NI' );
         for my $case (keys %case) {
