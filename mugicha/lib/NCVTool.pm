@@ -11,6 +11,7 @@ package NCVTool;
 
 use IPC::Open2;
 use Carp;
+use POSIX qw(:limits_h);
 #use Test::Simple qw( no_plan );
 
 use FindBin qw($Bin);
@@ -85,7 +86,7 @@ sub get_score {
     print $in "$csv\n";
     chomp(my $score = <$out>);
 
-    return ($score eq '4294967295') ? undef : $score;
+    return ($score eq '4294967295') ? -1 * INT_MAX : $score;
 }
 
 sub DESTROY {

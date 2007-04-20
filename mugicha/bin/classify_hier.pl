@@ -207,6 +207,12 @@ sub tournament {
 
     my @nps = grep { !$cab->equals($_,$morph) }
                 @{ $text->get_np };
+    my @context_nps;
+    for my $context (@{ $cab->get_text }) {
+        if ($context->get_id < $text->get_id) {
+            push @context_nps, @{ $context->get_np };
+        }
+    }
     if (@nps <= 1) {
         warn 'Nothing to compare';
     } else {
@@ -256,11 +262,19 @@ sub tournament {
                             chunk_id => $winner->get_chunk_id,
                           },
             };
-        if ($winner->get_surface =~
-            m/^(くん|さま|様|チャン|殿|さん|ちゃん|サマ|クン|どの|ちゃーん|君|ら|氏)$/gmx) {
-            set_event_arg($morph, $vframe, ${$winner->prev});
-        } else {
+        $winner = ${$winner->prev}
+            if ($winner->get_surface =~
+                m/^(くん|さま|様|チャン|殿|さん|ちゃん|サマ|クン|どの|ちゃーん|君|ら|氏)$/gmx);
+        if ($ncvtool->get_score($winner->get_surface.$vframe) > 0) {
             set_event_arg($morph, $vframe, $winner);
+        } else {
+            # 文間にあるかもしれず
+            for my $cand (@context_nps) {
+                my $q = $cand->get_surface.$vframe;
+                if ($ncvtool->get_score($q) > 0) {
+                    set_event_arg($morph, $vframe, $cand);
+                }
+            }
         }
         #print STDERR XMLout($tournament->xml, RootName => 'Tournament');
     }
@@ -268,7 +282,6 @@ sub tournament {
 
 sub set_event_arg {
     my ($event, $vframe, $arg) = @_;
-    return if ($ncvtool->get_score($arg->get_surface.$vframe) < 0);
     my $case = (split q[:], $vframe)[1];
     my $arg_id = $arg->get_text_id.':'.$arg->get_chunk_id.':'.$arg->get_id;
     my %marker = ( 'が' => 'GA', 'を' => 'WO', 'に' => 'NI' );
