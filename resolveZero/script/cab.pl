@@ -2594,7 +2594,7 @@ sub ext_case {
 	if ($m->POS =~ /^½õ»ì-³Ê½õ»ì-°ìÈÌ/) {
 	    $case .= $m->WF unless ($m->WF =~ /^(¤«|¤À¤±|¤³¤½|¤Ê¤É|¤Î¤ß)$/);
 	} elsif ($m->POS =~ /^½õ»ì-³Ê½õ»ì-Ï¢¸ì/) {
-	    $case .= $rengo{$m->WF};
+	    $case .= $rengo{$m->WF} if $rengo{$m->WF};
 	} elsif ($m->POS =~ /^½õ»ì(?!-ÀÜÂ³½õ»ì)/) {
 	    unless ($m->WF =~ /^(¤«|¤À¤±|¤³¤½|¤Ê¤É|¤Î¤ß)$/) {
 		$case .= $m->WF;
