@@ -107,7 +107,7 @@ sub new {
                     or defined $morph->next and ${$morph->next}->get_pos !~ m/^Æ°»ì/gmx
                     and $self->unamb($morph->get_surface)
                     and $morph->get_type ne 'pred') {
-                    $morph->set_relation($morph->get_relation.' type="event"');
+                    $morph->set_relation($morph->get_relation.' TYPE:event');
                 }
                 $morph_id++;
             }
