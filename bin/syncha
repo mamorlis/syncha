@@ -61,7 +61,7 @@ use warnings;
 
 our $VERSION = qw(1.8);
 
-use Carp qw(croak);
+use Carp qw(carp croak);
 use File::Temp qw(tempfile tempdir);
 use Getopt::Std;
 
@@ -109,7 +109,7 @@ while (<>) {
         chop $zero;
     }
 
-    my $ena_flag = "-t tinysvm";
+    my $ena_flag = "-t svmlight";
     my $ena = `echo "$zero" | $ena_tagger $ena_flag` or croak "Cannot exec $ena_tagger:$!";
     if ($options{'3'}) {
         print $ena;
