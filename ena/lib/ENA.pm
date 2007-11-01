@@ -358,7 +358,7 @@ sub make_train_data {
                 $feature{sentence}  = $sentence;
 
                 # 事態タグが付いているかどうか
-                if ($morph->get_type eq 'EVENT') {
+                if ($morph->get_type =~ /event/i) {
                     $feature{event} = 1; 
                     #if ($morph->get_case('GA')) {
                     #    $feature{event} += 2;
